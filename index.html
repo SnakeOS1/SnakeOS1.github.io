@@ -1,0 +1,3528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web OS</title>
+    <!-- 国内CDN引入 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.16.4/katex.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.16.4/katex.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/marked/4.2.12/marked.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.36.1/min/vs/editor/editor.main.js"></script>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.36.1/min/vs/editor/editor.main.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+    <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/languages/python.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/languages/java.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/languages/cpp.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/languages/css.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <style>
+        :root {
+            --primary: #1e88e5;
+            --primary-light: #64b5f6;
+            --primary-dark: #0d47a1;
+            --text: #333;
+            --text-light: #666;
+            --bg: #f5f5f5;
+            --window-bg: #fff;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* 桌面 */
+        .desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 50px;
+            background-color: var(--bg);
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            overflow: hidden;
+        }
+
+        /* 任务栏 */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 1000;
+        }
+
+        .start-btn {
+            background-color: var(--primary-dark);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            margin-right: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .taskbar-items {
+            display: flex;
+            flex: 1;
+            height: 100%;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .taskbar-item {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            height: 30px;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .taskbar-item.active {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .clock {
+            color: white;
+            margin-left: auto;
+            padding: 0 10px;
+            font-size: 14px;
+            border-radius: 3px;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 窗口样式 */
+        .window {
+            position: absolute;
+            min-width: 300px;
+            min-height: 200px;
+            background-color: var(--window-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+            resize: both;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .window-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+        }
+
+        .window-title {
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .window-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: transparent;
+            color: white;
+        }
+
+        .window-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .window-content {
+            flex: 1;
+            overflow: auto;
+            padding: 10px;
+        }
+
+        .window.minimized {
+            display: none;
+        }
+
+        .window.maximized {
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+            resize: none;
+            border-radius: 0;
+        }
+
+        /* 编辑器窗口 */
+        .editor-container {
+            display: flex;
+            height: 100%;
+        }
+
+        .editor-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-toolbar {
+            padding: 5px;
+            background-color: #f0f0f0;
+            display: flex;
+            gap: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .editor-toolbar button {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .editor-toolbar button:hover {
+            background-color: #f0f0f0;
+        }
+
+        .editor-textarea {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            resize: none;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .preview-panel {
+            flex: 1;
+            padding: 2em;
+            overflow: auto;
+            border-left: 1px solid #ddd;
+        }
+
+        /* 文件管理器 */
+        .file-manager {
+            display: flex;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: #f5f5f5;
+            border-right: 1px solid #ddd;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .file-list {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .file-item.selected {
+            background-color: #e3f2fd;
+        }
+
+        /* 上下文菜单 */
+        .context-menu {
+            position: absolute;
+            background-color: white;
+            box-shadow: var(--shadow);
+            border-radius: 4px;
+            z-index: 10000;
+            min-width: 150px;
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .context-menu-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .context-menu2 {
+            position: absolute;
+            background-color: white;
+            box-shadow: var(--shadow);
+            border-radius: 4px;
+            z-index: 10000;
+            min-width: 150px;
+        }
+
+        .context-menu2-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .context-menu2-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 开始菜单 */
+        .start-menu {
+            position: absolute;
+            bottom: 50px;
+            left: 10px;
+            width: 300px;
+            background-color: white;
+            box-shadow: var(--shadow);
+            border-radius: 8px 8px 0 0;
+            z-index: 1000;
+            display: none;
+        }
+
+        .start-menu-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+        }
+
+        .start-menu-items {
+            padding: 10px;
+        }
+
+        .start-menu-item {
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .start-menu-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* 桌面图标 */
+        .desktop-icons {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .desktop-icon i {
+            font-size: 32px;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .desktop-icon span {
+            font-size: 12px;
+            color: var(--text);
+            word-break: break-all;
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 1000;
+            display: none;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .editor-container {
+                flex-direction: column;
+            }
+
+            .preview-panel {
+                border-left: none;
+                border-top: 1px solid #ddd;
+            }
+        }
+
+        /* 文件名输入框 */
+        .filename-input {
+            padding: 3px 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+            width: 150px;
+            margin-right: 5px;
+        }
+
+        /* 工具栏按钮间距 */
+        .editor-toolbar button {
+            margin-right: 5px;
+        }
+
+        /* Monaco 编辑器容器 */
+        .monaco-editor-container {
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 工具栏下拉菜单 */
+        .editor-toolbar select {
+            padding: 3px 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            background-color: white;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+
+        .editor-toolbar select:hover {
+            background-color: #f0f0f0;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .folder-item {
+            margin-bottom: 5px;
+        }
+
+        .folder-header {
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .folder-header:hover {
+            background-color: #f0f0f0;
+        }
+
+        .folder-toggle {
+            margin-left: auto;
+            font-size: 12px;
+        }
+
+        .folder-content {
+            border-left: 2px solid #ddd;
+            padding-left: 10px;
+        }
+
+        .toolbar-btn {
+            background-color: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+        }
+
+        .toolbar-btn:hover {
+            background-color: var(--primary);
+        }
+
+        /* 面包屑导航样式 */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb-item {
+            cursor: pointer;
+            color: var(--primary);
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .breadcrumb-item:hover {
+            background-color: #e3f2fd;
+        }
+
+        /* 工具栏按钮样式 */
+        .toolbar-btn {
+            background-color: var(--primary-light);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        .toolbar-btn:hover {
+            background-color: var(--primary);
+        }
+
+        .toolbar-btn i {
+            margin-right: 5px;
+        }
+
+        /* 文件列表样式 */
+        .folder-item {
+            background-color: #f9f9f9;
+            border-left: 3px solid var(--primary-light);
+        }
+
+        .folder-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        /* 文件名输入框 */
+        .filename-input {
+            padding: 5px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 200px;
+            margin-right: 10px;
+        }
+
+        /* 代码空间样式 */
+        .code-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f1f1f1;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            padding: 6px 12px;
+            margin-bottom: -10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease-in-out;
+        }
+
+        .code-toolbar:hover {
+            background: #e9e9e9;
+        }
+
+        .language-label {
+            font-size: 13px;
+            color: #666;
+            font-family: monospace;
+            background: #ddd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: lowercase;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .copy-btn:hover {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        pre {
+            position: relative;
+            margin-top: 0;
+            border-radius: 0 0 4px 4px;
+            background-color: #e9e9e9;
+        }
+
+        code {
+            padding: 1em;
+            overflow-y: auto;
+            overflow-x: auto;
+        }
+
+        /* 空间管理器样式 */
+        .space-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .space-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .space-item i {
+            margin-right: 8px;
+            color: var(--primary);
+        }
+
+        /* 代码工具栏样式 */
+        .code-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #888;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s ease-in-out;
+        }
+
+        .copy-btn:hover {
+            background: #dcdcdc;
+            color: #333;
+        }
+
+        .copy-btn i {
+            font-size: 14px;
+        }
+
+        pre {
+            position: relative;
+            margin-top: 0;
+            border-radius: 0 0 4px 4px;
+            background-color: #e9e9e9;
+        }
+
+        .hljs {
+            background-color: #f8f8f8;
+            color: #333;
+            padding: 1em;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        /* 自定义滚动条（仅限支持浏览器） */
+        .hljs::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .hljs::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        .hljs::-webkit-scrollbar-track {
+            background: #eee;
+        }
+
+        /* 时间点击面板样式 */
+        .time-panel {
+            position: fixed;
+            bottom: 50px;
+            right: 10px;
+            width: 300px;
+            background-color: white;
+            box-shadow: var(--shadow);
+            border-radius: 8px 8px 0 0;
+            z-index: 1000;
+            display: none;
+            padding: 10px;
+        }
+
+        .time-panel-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+
+        .time-panel-tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .time-panel-tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .time-panel-content {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .time-panel-section {
+            display: none;
+        }
+
+        .time-panel-section.active {
+            display: block;
+        }
+
+        /* 日历样式 */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .calendar-header button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            padding: 10px 0;
+            background-color: #f5f5f5;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            padding: 10px;
+        }
+
+        .calendar-day {
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            background-color: #f0f0f0;
+        }
+
+        .calendar-day.today {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .calendar-day.other-month {
+            color: #ccc;
+        }
+
+        .calendar-day.has-events:after {
+            content: '';
+            display: block;
+            width: 5px;
+            height: 5px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            margin: 5px auto 0;
+        }
+
+        .calendar-events {
+            position: relative;
+            background-color: white;
+            border-radius: 8px;
+            margin-top: 10px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .calendar-events .arrow {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 10px solid white;
+        }
+
+        .calendar-events .events {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-category {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .event-work {
+            background-color: #ff9800;
+        }
+
+        .event-personal {
+            background-color: #4caf50;
+        }
+
+        .event-other {
+            background-color: #2196f3;
+        }
+
+        /* 音乐播放器样式 */
+        .music-player {
+            width: 100%;
+        }
+
+        .music-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .music-progress {
+            width: 100%;
+            height: 4px;
+            background-color: #ddd;
+            margin: 10px 0;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .music-progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 2px;
+            width: 0%;
+        }
+
+        /* 通知样式 */
+        .notification-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        /* 发现应用样式 */
+        .discovery-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .discovery-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            padding: 0 10px;
+        }
+
+        .discovery-tab {
+            padding: 10px 15px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .discovery-tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .discovery-content {
+            flex: 1;
+            overflow: auto;
+            padding: 10px;
+        }
+
+        .discovery-section {
+            display: none;
+            height: 100%;
+        }
+
+        .discovery-section.active {
+            display: block;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .app-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .app-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .app-card h3 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+
+        .app-card p {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .download-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .download-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .giscus-comments {
+            height: 100%;
+            min-height: 500px;
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 880px;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .carousel-images {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .carousel-images img {
+            width: 100%;
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        .carousel-indicators {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+        }
+
+        .carousel-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .carousel-indicator.active {
+            background-color: white;
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 880px;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .carousel-images {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            width: 100%;
+        }
+
+        .carousel-images img {
+            width: 100%;
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .carousel-btn.prev {
+            left: 10px;
+        }
+
+        .carousel-btn.next {
+            right: 10px;
+        }
+
+        .carousel-indicators {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 2;
+        }
+
+        .carousel-indicator {
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .carousel-indicator.active {
+            background-color: white;
+        }
+
+        .start-menu-search {
+            padding: 10px;
+            position: relative;
+            border-bottom: 1px solid #eee;
+        }
+
+        .start-menu-search input {
+            width: 100%;
+            padding: 8px 30px 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .start-menu-search i {
+            position: absolute;
+            right: 20px;
+            top: 18px;
+            color: #999;
+        }
+
+        .taskbar-search {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .taskbar-search input {
+            width: 200px;
+            height: 30px;
+            border-radius: 4px;
+            border: none;
+            padding: 0 10px;
+            font-size: 14px;
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        #taskbar-search::placeholder {
+            color: #ffffff80;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="desktop">
+        <div class="desktop-icons">
+            <div class="desktop-icon" data-app="file-manager">
+                <i class="fas fa-folder"></i>
+                <span>文件管理器</span>
+            </div>
+            <div class="desktop-icon" data-app="editor">
+                <i class="fas fa-file-alt"></i>
+                <span>文本编辑器</span>
+            </div>
+            <div class="desktop-icon" data-app="space-manager">
+                <i class="fas fa-cubes"></i>
+                <span>代码空间</span>
+            </div>
+            <div class="desktop-icon" data-app="discovery">
+                <i class="fas fa-compass"></i>
+                <span>发现</span>
+            </div>
+        </div>
+
+        <!-- 窗口将在这里动态生成 -->
+    </div>
+
+    <div class="taskbar">
+        <button class="start-btn" id="start-btn">
+            <i class="fas fa-bars" style="bottom: 0px !important;"></i>
+            <span>开始</span>
+        </button>
+
+        <div class="taskbar-search">
+            <input type="text" id="taskbar-search" placeholder="搜索应用/文件/代码空间..." />
+        </div>
+
+        <div class="taskbar-items" id="taskbar-items">
+            <!-- 任务栏项目将在这里动态生成 -->
+        </div>
+
+        <div class="clock" id="clock" title="点击查看更多"></div>
+    </div>
+
+    <div class="start-menu" id="start-menu">
+        <div class="start-menu-header">
+            Web OS
+        </div>
+        <div class="start-menu-search">
+            <input type="text" id="start-menu-search" placeholder="搜索应用...">
+            <i class="fas fa-search"></i>
+        </div>
+        <div class="start-menu-items">
+            <div class="start-menu-item" data-app="file-manager">
+                <i class="fas fa-folder"></i>
+                <span>文件管理器</span>
+            </div>
+            <div class="start-menu-item" data-app="editor">
+                <i class="fas fa-file-alt"></i>
+                <span>文本编辑器</span>
+            </div>
+            <div class="start-menu-item" data-app="space">
+                <i class="fas fa-cube"></i>
+                <span>新空间</span>
+            </div>
+            <div class="start-menu-item" data-app="space-manager">
+                <i class="fas fa-cubes"></i>
+                <span>代码空间（管理器）</span>
+            </div>
+            <div class="start-menu-item" data-app="discovery">
+                <i class="fas fa-compass"></i>
+                <span>发现</span>
+            </div>
+            <div class="start-menu-item" id="shutdown-btn" styel="display: none;">
+                <i class="fas fa-power-off"></i>
+                <span>重启</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="time-panel" id="time-panel">
+        <div class="time-panel-tabs">
+            <div class="time-panel-tab active" data-tab="calendar">日历</div>
+            <div class="time-panel-tab" data-tab="music">音乐</div>
+            <div class="time-panel-tab" data-tab="notifications">通知</div>
+        </div>
+        <div class="time-panel-content">
+            <div class="time-panel-section active" id="calendar-section">
+                <div class="calendar-header">
+                    <button id="prev-month"><i class="fas fa-chevron-left"></i></button>
+                    <h4 id="calendar-month-year"></h4>
+                    <button id="next-month"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar-weekdays">
+                    <div>日</div>
+                    <div>一</div>
+                    <div>二</div>
+                    <div>三</div>
+                    <div>四</div>
+                    <div>五</div>
+                    <div>六</div>
+                </div>
+                <div class="calendar-days" id="calendar-days"></div>
+                <div class="calendar-events" id="calendar-events style=" display: none;">
+                    <div class="arrow"></div>
+                    <div class="events" id="events-list"></div>
+                </div>
+            </div>
+            <div class="time-panel-section" id="music-section">
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+                <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/meting@2.0.1/dist/Meting.min.js"></script>
+                <meting-js class="meting" server="netease" type="playlist" volume="0.5" id="1" autoplay="false"
+                    loop="all" order="list" preload="auto" list-folded="true" list-max-height="200px" lrc-type="0"
+                    theme="#9ce0ff" style="color: #9ce0ff;">
+                </meting-js>
+            </div>
+            <div class="time-panel-section" id="notifications-section">
+                <div class="notification-item">暂无新通知</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" data-action="open">打开</div>
+        <div class="context-menu-item" data-action="rename">重命名</div>
+        <div class="context-menu-item" data-action="delete">删除</div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // 全局变量
+        let windows = {};
+        let spaces = {};
+        let activeWindowId = null;
+        let nextWindowId = 1;
+        let files = {};
+        let autoSaveInterval;
+        let timePanel;
+        let currentDate = moment();
+        let events = {};
+
+        // DOM元素
+        const desktop = document.querySelector('.desktop');
+        const taskbarItems = document.getElementById('taskbar-items');
+        const startBtn = document.getElementById('start-btn');
+        const startMenu = document.getElementById('start-menu');
+        const contextMenu = document.getElementById('context-menu');
+        const tooltip = document.getElementById('tooltip');
+        const clock = document.getElementById('clock');
+
+        const appList = [
+            { name: '文件管理器', icon: 'fa-folder', appType: 'file-manager' },
+            { name: '文本编辑器', icon: 'fa-file-alt', appType: 'editor' },
+            { name: '代码空间', icon: 'fa-cube', appType: 'space' },
+            { name: '代码空间管理器', icon: 'fa-cubes', appType: 'space-manager' },
+            { name: '发现', icon: 'fa-compass', appType: 'discovery' }
+        ];
+
+        function getFilesAsSearchableList() {
+            return Object.values(files).map(file => ({
+                name: file.name,
+                type: 'file',
+                fileId: file.id
+            }));
+        }
+
+        function getSpacesAsSearchableList() {
+            return Object.values(spaces).map(space => ({
+                name: space.title,
+                type: 'space',
+                spaceId: space.id
+            }));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('taskbar-search');
+
+            // 实时搜索
+            searchInput.addEventListener('input', (e) => {
+                const keyword = e.target.value.trim().toLowerCase();
+                if (!keyword) return;
+
+                const matchedApps = appList.filter(app =>
+                    app.name.toLowerCase().includes(keyword)
+                );
+                const matchedFiles = getFilesAsSearchableList().filter(file =>
+                    file.name.toLowerCase().includes(keyword)
+                );
+                const matchedSpaces = getSpacesAsSearchableList().filter(space =>
+                    space.name.toLowerCase().includes(keyword)
+                );
+
+                showSearchResults([...matchedApps, ...matchedFiles, ...matchedSpaces]);
+            });
+
+            // 回车触发第一个结果
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const results = document.querySelectorAll('.search-result-item');
+                    if (results.length > 0) {
+                        results[0].click();
+                    }
+                }
+            });
+        });
+
+        function showSearchResults(results) {
+            let dropdown = document.querySelector('.search-results-dropdown');
+            const searchInput = document.getElementById('taskbar-search');
+
+            // 如果没有结果且没有 dropdown，则直接返回
+            if (results.length === 0 && !dropdown) return;
+
+            // 如果不存在则创建
+            if (!dropdown) {
+                dropdown = document.createElement('div');
+                dropdown.className = 'search-results-dropdown';
+                dropdown.style.position = 'absolute';
+                dropdown.style.zIndex = '1001';
+                dropdown.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                dropdown.style.background = '#fff';
+                dropdown.style.border = '1px solid #ccc';
+                dropdown.style.maxHeight = '300px';
+                dropdown.style.overflowY = 'auto';
+                dropdown.style.width = '300px';
+                document.body.appendChild(dropdown);
+            }
+
+            // 设置位置：位于搜索框正上方
+            const rect = searchInput.getBoundingClientRect();
+            dropdown.style.left = `${rect.right - 300}px`; // 宽度为 300
+            dropdown.style.bottom = `${window.innerHeight - rect.top + 10}px`;
+
+            // 清空内容
+            dropdown.innerHTML = '';
+
+            // 显示无结果提示
+            if (results.length === 0) {
+                dropdown.innerHTML = '<div style="padding: 10px;">未找到相关结果</div>';
+                return;
+            }
+
+            // 填充搜索结果
+            results.forEach(itemData => {
+                const item = document.createElement('div');
+                item.className = 'search-result-item';
+                item.style.padding = '8px 12px';
+                item.style.cursor = 'pointer';
+                item.style.display = 'flex';
+                item.style.alignItems = 'center';
+                item.style.gap = '10px';
+
+                // 图标逻辑
+                let iconHtml = '';
+                if (itemData.type === 'file') {
+                    iconHtml = `<i class="fas fa-file-alt"></i>`;
+                } else if (itemData.type === 'space') {
+                    iconHtml = `<i class="fas fa-cube"></i>`;
+                } else {
+                    iconHtml = `<i class="fas ${appList.find(a => a.appType === itemData.appType)?.icon || 'fa-window-maximize'}"></i>`;
+                }
+
+                item.innerHTML = `${iconHtml}<span>${itemData.name}</span>`;
+
+                item.addEventListener('click', () => {
+                    if (itemData.type === 'file') {
+                        openApp('editor', itemData.fileId);
+                    } else if (itemData.type === 'space') {
+                        openApp('space', itemData.spaceId);
+                    } else {
+                        openApp(itemData.appType);
+                    }
+
+                    dropdown.remove(); // 关闭搜索结果
+                    searchInput.value = ''; // 清空输入框
+                });
+
+                dropdown.appendChild(item);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('taskbar-search');
+
+            // 实时搜索
+            searchInput.addEventListener('input', (e) => {
+                const keyword = e.target.value.trim().toLowerCase();
+                if (!keyword) return;
+
+                const matchedApps = appList.filter(app =>
+                    app.name.toLowerCase().includes(keyword)
+                );
+                const matchedFiles = getFilesAsSearchableList().filter(file =>
+                    file.name.toLowerCase().includes(keyword)
+                );
+                const matchedSpaces = getSpacesAsSearchableList().filter(space =>
+                    space.name.toLowerCase().includes(keyword)
+                );
+
+                showSearchResults([...matchedApps, ...matchedFiles, ...matchedSpaces]);
+            });
+
+            // 回车触发第一个结果
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const results = document.querySelectorAll('.search-result-item');
+                    if (results.length > 0) {
+                        results[0].click();
+                    }
+                }
+            });
+
+            // 点击外部区域关闭搜索框
+            document.addEventListener('click', (e) => {
+                const dropdown = document.querySelector('.search-results-dropdown');
+                if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput) {
+                    dropdown.remove();
+                }
+            });
+
+            // 按下 ESC 键关闭搜索框
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    const dropdown = document.querySelector('.search-results-dropdown');
+                    if (dropdown) {
+                        dropdown.remove();
+                        searchInput.value = '';
+                    }
+                }
+            });
+        });
+
+        document.getElementById('start-menu-search').addEventListener('input', function (e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const menuItems = document.querySelectorAll('.start-menu-item');
+
+            menuItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 加载保存的状态
+            loadState();
+
+            timePanel = document.getElementById('time-panel');
+
+            // 初始化默认空间数据（如果不存在）
+            if (!localStorage.getItem('spaces')) {
+                spaces = {
+                    'space-1': {
+                        id: 'space-1',
+                        title: '示例空间',
+                        type: 'space',
+                        content: '# 欢迎使用代码空间\n\n这是一个示例空间，你可以在这里保存代码片段。\n\n```javascript\n// JavaScript示例\nfunction hello() {\n  console.log("Hello, World!");\n}\n```\n\n数学公式示例：\n\n$$ E = mc^2 $$\n\n$ a^2 + b^2 = c^2 $',
+                        language: 'markdown',
+                        created: Date.now(),
+                        modified: Date.now()
+                    }
+                };
+                localStorage.setItem('spaces', JSON.stringify(spaces));
+            } else {
+                spaces = JSON.parse(localStorage.getItem('spaces'));
+            }
+
+            // 初始化事件监听
+            initEventListeners();
+
+            // 更新时钟
+            updateClock();
+            setInterval(updateClock, 1000);
+
+            // 启动自动保存
+            startAutoSave();
+        });
+
+        // 初始化事件监听
+        function initEventListeners() {
+            // 开始按钮
+            startBtn.addEventListener('click', toggleStartMenu);
+
+            // 桌面图标
+            document.querySelectorAll('.desktop-icon').forEach(icon => {
+                icon.addEventListener('dblclick', () => {
+                    const app = icon.getAttribute('data-app');
+                    openApp(app);
+                });
+            });
+
+            // 开始菜单项
+            document.querySelectorAll('.start-menu-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const app = item.getAttribute('data-app');
+                    if (app) {
+                        openApp(app);
+                    } else if (item.id === 'shutdown-btn') {
+                        // 保存状态并刷新
+                        saveState();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 100);
+                    }
+                    hideStartMenu();
+                });
+            });
+
+            // 点击其他地方隐藏开始菜单和上下文菜单
+            document.addEventListener('click', (e) => {
+                if (!startMenu.contains(e.target) && e.target !== startBtn) {
+                    hideStartMenu();
+                }
+
+                if (!contextMenu.contains(e.target)) {
+                    hideContextMenu();
+                }
+            });
+
+            // 阻止上下文菜单默认行为
+            document.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
+
+            // 添加快捷键监听
+            document.addEventListener('keydown', (e) => {
+                if (activeWindowId && windows[activeWindowId]) {
+                    const win = windows[activeWindowId];
+
+                    // 文件管理器: Ctrl+D 删除文件
+                    if (win.type === 'file-manager' && e.ctrlKey && e.key === 'd') {
+                        const selectedFile = document.querySelector(`#file-list-${activeWindowId} .file-item.selected`);
+                        if (selectedFile) {
+                            const fileId = selectedFile.getAttribute('data-file-id');
+                            deleteFile(fileId);
+                        }
+                    }
+
+                    // 编辑器: Ctrl+S 保存文件
+                    if ((win.type === 'editor' || win.type === 'monaco-editor') && e.ctrlKey && e.key === 's') {
+                        e.preventDefault();
+                        if (win.fileId) {
+                            saveFile(files[win.fileId]);
+                            showNotification('文件已保存');
+                        }
+                    }
+                    // 文件管理器: Ctrl+D 删除文件或文件夹
+                    if (win.type === 'file-manager' && e.ctrlKey && e.key === 'd') {
+                        const selectedFile = document.querySelector(`#file-list-${activeWindowId} .file-item.selected`);
+                        if (selectedFile) {
+                            if (selectedFile.classList.contains('folder-item')) {
+                                // 删除文件夹
+                                const folderName = selectedFile.getAttribute('data-folder-name');
+                                const fullPath = win.currentPath ? `${win.currentPath}/${folderName}` : folderName;
+
+                                if (confirm(`确定要删除文件夹 "${folderName}" 及其所有内容吗？`)) {
+                                    // 删除该路径下的所有文件
+                                    Object.keys(files).forEach(fileId => {
+                                        if (files[fileId].name.startsWith(`${fullPath}/`)) {
+                                            delete files[fileId];
+                                        }
+                                    });
+                                    // 删除文件夹标记文件
+                                    Object.keys(files).forEach(fileId => {
+                                        if (files[fileId].name === `${fullPath}/.folder`) {
+                                            delete files[fileId];
+                                        }
+                                    });
+                                    saveState();
+                                    refreshFileList(activeWindowId);
+                                    showNotification(`已删除文件夹：${folderName}`);
+                                }
+                            } else {
+                                // 删除文件
+                                const fileId = selectedFile.getAttribute('data-file-id');
+                                deleteFile(fileId);
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 时间点击事件
+            clock.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleTimePanel();
+            });
+
+            // 时间面板标签切换
+            document.querySelectorAll('.time-panel-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.time-panel-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const tabId = tab.getAttribute('data-tab');
+                    document.querySelectorAll('.time-panel-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    document.getElementById(`${tabId}-section`).classList.add('active');
+                });
+            });
+
+            // 点击其他地方隐藏时间面板
+            document.addEventListener('click', (e) => {
+                if (!timePanel.contains(e.target) && e.target !== clock) {
+                    hideTimePanel();
+                }
+            });
+
+            // 日历月份切换
+            document.getElementById('prev-month').addEventListener('click', () => {
+                currentDate.subtract(1, 'month');
+                renderCalendar();
+            });
+
+            document.getElementById('next-month').addEventListener('click', () => {
+                currentDate.add(1, 'month');
+                renderCalendar();
+            });
+
+            // 初始化日历
+            renderCalendar();
+        }
+
+        // 时间面板控制
+        function toggleTimePanel() {
+            if (timePanel.style.display === 'block') {
+                hideTimePanel();
+            } else {
+                showTimePanel();
+            }
+        }
+
+        function showTimePanel() {
+            timePanel.style.display = 'block';
+        }
+
+        function hideTimePanel() {
+            timePanel.style.display = 'none';
+        }
+
+        // 渲染日历
+        function renderCalendar() {
+            const calendarDays = document.getElementById('calendar-days');
+            const monthYear = document.getElementById('calendar-month-year');
+
+            // 设置月份年份标题
+            monthYear.textContent = currentDate.format('YYYY年MM月');
+
+            // 清空日历
+            calendarDays.innerHTML = '';
+
+            // 获取当月第一天和最后一天
+            const firstDay = currentDate.clone().startOf('month');
+            const lastDay = currentDate.clone().endOf('month');
+
+            // 获取当月第一天是星期几（0-6，0是星期日）
+            const firstDayOfWeek = firstDay.day();
+
+            // 获取上个月的最后几天
+            const prevMonthLastDay = firstDay.clone().subtract(1, 'day');
+            const daysInPrevMonth = prevMonthLastDay.date();
+
+            // 添加上个月的几天
+            for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const dayElement = createDayElement(prevMonthLastDay.clone().date(day), true);
+                calendarDays.appendChild(dayElement);
+            }
+
+            // 添加当月的所有天
+            for (let day = 1; day <= lastDay.date(); day++) {
+                const date = firstDay.clone().date(day);
+                const dayElement = createDayElement(date);
+                calendarDays.appendChild(dayElement);
+            }
+
+            // 计算还需要显示下个月的几天
+            const totalDaysShown = firstDayOfWeek + lastDay.date();
+            const remainingCells = 42 - totalDaysShown; // 6行x7天=42格
+
+            if (remainingCells > 0) {
+                const nextMonth = lastDay.clone().add(1, 'month');
+                for (let day = 1; day <= remainingCells; day++) {
+                    const dayElement = createDayElement(nextMonth.clone().date(day), true);
+                    calendarDays.appendChild(dayElement);
+                }
+            }
+        }
+
+        // 创建日历天元素
+        function createDayElement(date, isOtherMonth = false) {
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.textContent = date.date();
+
+            // 检查是否是今天
+            if (date.isSame(moment(), 'day')) {
+                dayElement.classList.add('today');
+            }
+
+            // 检查是否是其他月份
+            if (isOtherMonth) {
+                dayElement.classList.add('other-month');
+            }
+
+            // 检查是否有事件
+            const dateStr = date.format('YYYY-MM-DD');
+            if (events[dateStr] && events[dateStr].length > 0) {
+                dayElement.classList.add('has-events');
+            }
+
+            // 添加点击事件
+            dayElement.addEventListener('click', () => {
+                showEventsForDate(date);
+            });
+
+            return dayElement;
+        }
+
+        // 显示某天的事件
+        function showEventsForDate(date) {
+            const eventsPanel = document.getElementById('calendar-events');
+            const eventsList = document.getElementById('events-list');
+            const dateStr = date.format('YYYY-MM-DD');
+
+            eventsList.innerHTML = '';
+
+            if (events[dateStr] && events[dateStr].length > 0) {
+                events[dateStr].forEach(event => {
+                    const eventItem = document.createElement('div');
+                    eventItem.className = 'event-item';
+                    eventItem.innerHTML = `
+                    <span class="event-category event-${event.type}"></span>
+                    <span>${event.title}</span>
+                `;
+                    eventsList.appendChild(eventItem);
+                });
+            } else {
+                const noEventItem = document.createElement('div');
+                noEventItem.className = 'event-item';
+                noEventItem.textContent = '没有事件';
+                eventsList.appendChild(noEventItem);
+            }
+
+            // 显示事件面板
+            eventsPanel.style.display = 'block';
+        }
+
+        // 添加示例事件
+        function addSampleEvents() {
+            const today = moment().format('YYYY-MM-DD');
+            const tomorrow = moment().add(1, 'day').format('YYYY-MM-DD');
+
+            events[today] = [
+                { title: '团队会议', type: 'work' },
+                { title: '医生预约', type: 'personal' }
+            ];
+
+            events[tomorrow] = [
+                { title: '项目截止', type: 'work' }
+            ];
+        }
+
+        // 切换开始菜单显示
+        function toggleStartMenu() {
+            if (startMenu.style.display === 'block') {
+                hideStartMenu();
+            } else {
+                showStartMenu();
+            }
+        }
+
+        function showStartMenu() {
+            startMenu.style.display = 'block';
+        }
+
+        function hideStartMenu() {
+            startMenu.style.display = 'none';
+        }
+
+        // 显示上下文菜单
+        function showContextMenu(x, y, fileId = null) {
+            contextMenu.style.left = `${x}px`;
+            contextMenu.style.top = `${y}px`;
+            contextMenu.style.display = 'block';
+            contextMenu.setAttribute('data-file-id', fileId);
+        }
+
+        function hideContextMenu() {
+            contextMenu.style.display = 'none';
+        }
+
+        // 显示工具提示
+        function showTooltip(text, x, y) {
+            tooltip.textContent = text;
+            tooltip.style.left = `${x}px`;
+            tooltip.style.top = `${y}px`;
+            tooltip.style.display = 'block';
+        }
+
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        // 更新时钟
+        function updateClock() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const timeStr = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+            clock.innerHTML = `${timeStr} <i class="fas fa-ellipsis-h"></i>`;
+        }
+
+        // 打开应用程序
+        function openApp(app, id = null) {
+            let windowId = `window-${nextWindowId++}`;
+
+            switch (app) {
+                case 'file-manager':
+                    createFileManagerWindow(windowId);
+                    break;
+                case 'editor':
+                    createEditorWindow(windowId, id);
+                    break;
+                case 'monaco-editor':
+                    createMonacoEditorWindow(windowId, id);
+                    break;
+                case 'space':
+                    createSpaceWindow(windowId, id);
+                    break;
+                case 'space-manager':
+                    createSpaceManagerWindow(windowId);
+                    break;
+                case 'discovery':
+                    createDiscoveryWindow(windowId);
+                    break;
+            }
+
+            // 添加到任务栏
+            addToTaskbar(windowId, app);
+
+            // 激活窗口
+            activateWindow(windowId);
+        }
+
+        // 创建文件管理器窗口
+        function createFileManagerWindow(windowId) {
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.id = windowId;
+            windowEl.style.width = '800px';
+            windowEl.style.height = '500px';
+            windowEl.style.top = '50px';
+            windowEl.style.left = '50px';
+
+            windowEl.innerHTML = `
+        <div class="window-header">
+            <div class="window-title">
+                <i class="fas fa-folder"></i>
+                <span>文件管理器</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize-btn"><i class="fas fa-window-minimize"></i></button>
+                <button class="window-btn maximize-btn"><i class="fas fa-window-maximize"></i></button>
+                <button class="window-btn close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="file-manager">
+                <div class="sidebar">
+                    <h3>存储位置</h3>
+                    <div class="file-item selected" data-location="local">
+                        <i class="fas fa-hdd"></i>
+                        <span>本地存储</span>
+                    </div>
+                    <div class="file-actions" style="margin-top: 10px;">
+                        <button id="upload-btn-${windowId}" class="toolbar-btn">
+                            <i class="fas fa-upload"></i> 上传文件
+                        </button>
+                        <input type="file" id="file-input-${windowId}" accept=".md,.txt,.js,.html,.css,.json" style="display: none;">
+                        <button id="new-folder-btn-${windowId}" class="toolbar-btn" style="margin-top: 5px; display: none;">
+                            <i class="fas fa-folder-plus"></i> 新建文件夹
+                        </button>
+                        <button id="delete-folder-btn-${windowId}" class="toolbar-btn" style="margin-top: 5px; background-color: #f44336; display: none;">
+                            <i class="fas fa-trash"></i> 删除文件夹
+                        </button>
+                    </div>
+                </div>
+                <div class="file-content">
+                    <div class="breadcrumb" id="breadcrumb-${windowId}" style="padding: 5px 10px; background: #f5f5f5; border-bottom: 1px solid #ddd;">
+                        <span class="breadcrumb-item" data-path="">根目录</span>
+                    </div>
+                    <div class="file-list" id="file-list-${windowId}"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+            desktop.appendChild(windowEl);
+            windows[windowId] = {
+                type: 'file-manager',
+                element: windowEl,
+                minimized: false,
+                maximized: false,
+                currentPath: '' // 当前路径
+            };
+
+            // 初始化文件列表
+            refreshFileList(windowId);
+
+            // 初始化窗口控制
+            initWindowControls(windowId);
+
+            // 文件上传功能
+            const uploadBtn = document.getElementById(`upload-btn-${windowId}`);
+            const fileInput = document.getElementById(`file-input-${windowId}`);
+
+            uploadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const pathPrefix = windows[windowId].currentPath ? `${windows[windowId].currentPath}/` : '';
+                        const newFile = createNewFile(`${pathPrefix}${file.name}`);
+                        newFile.content = event.target.result;
+                        saveFile(newFile);
+                        refreshFileList(windowId);
+                        showNotification(`已上传 ${file.name}`);
+                    };
+                    reader.readAsText(file);
+                    fileInput.value = ''; // 重置文件输入
+                }
+            });
+
+            // 新建文件夹
+            const newFolderBtn = windowEl.querySelector(`#new-folder-btn-${windowId}`);
+            newFolderBtn.addEventListener('click', () => {
+                const folderName = prompt('请输入文件夹名称');
+                if (folderName) {
+                    const pathPrefix = windows[windowId].currentPath ? `${windows[windowId].currentPath}/` : '';
+                    // 创建一个隐藏的文件夹标记文件
+                    const folderFile = createNewFile(`${pathPrefix}${folderName}/.folder`);
+                    folderFile.content = '这是一个文件夹标记文件，请不要删除';
+                    const folderFile2 = createNewFile(`${folderName}/1.md`);
+                    folderFile.content = '1';
+                    saveFile(folderFile);
+                    refreshFileList(windowId);
+                    showNotification(`已创建文件夹：${folderName}`);
+                }
+            });
+
+            // 删除文件夹
+            const deleteFolderBtn = windowEl.querySelector(`#delete-folder-btn-${windowId}`);
+            deleteFolderBtn.addEventListener('click', () => {
+                if (windows[windowId].currentPath) {
+                    const folderName = windows[windowId].currentPath.split('/').pop();
+                    if (confirm(`确定要删除文件夹 "${folderName}" 及其所有内容吗？`)) {
+                        // 删除该路径下的所有文件
+                        Object.keys(files).forEach(fileId => {
+                            if (files[fileId].name.startsWith(windows[windowId].currentPath + '/')) {
+                                delete files[fileId];
+                            }
+                        });
+                        // 删除文件夹标记文件
+                        Object.keys(files).forEach(fileId => {
+                            if (files[fileId].name === `${windows[windowId].currentPath}/.folder`) {
+                                delete files[fileId];
+                            }
+                        });
+                        saveState();
+                        windows[windowId].currentPath = '';
+                        refreshFileList(windowId);
+                        showNotification(`已删除文件夹：${folderName}`);
+                    }
+                } else {
+                    showNotification('请先进入要删除的文件夹');
+                }
+            });
+
+            // 文件选择功能
+            const fileList = document.getElementById(`file-list-${windowId}`);
+            fileList.addEventListener('click', (e) => {
+                const fileItem = e.target.closest('.file-item');
+                if (fileItem) {
+                    document.querySelectorAll('.file-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    fileItem.classList.add('selected');
+                }
+            });
+
+            // 文件列表右键菜单
+            fileList.addEventListener('contextmenu', (e) => {
+                const fileItem = e.target.closest('.file-item');
+                if (fileItem) {
+                    e.preventDefault();
+                    const fileId = fileItem.getAttribute('data-file-id');
+                    showContextMenu(e.pageX, e.pageY, fileId);
+                }
+            });
+
+            // 双击打开文件或进入文件夹
+            fileList.addEventListener('dblclick', (e) => {
+                const fileItem = e.target.closest('.file-item');
+                if (fileItem) {
+                    if (fileItem.classList.contains('folder-item')) {
+                        // 进入文件夹
+                        const folderName = fileItem.getAttribute('data-folder-name');
+                        const newPath = windows[windowId].currentPath
+                            ? `${windows[windowId].currentPath}/${folderName}`
+                            : folderName;
+                        windows[windowId].currentPath = newPath;
+                        refreshFileList(windowId);
+                    } else {
+                        // 打开文件或空间
+                        const fileId = fileItem.getAttribute('data-file-id');
+                        const file = files[fileId];
+                        if (file.type === 'space') {
+                            openApp('space', file.id);
+                        } else if (file.name.endsWith('.md')) {
+                            openApp('editor', fileId);
+                        } else {
+                            openApp('monaco-editor', fileId);
+                        }
+                    }
+                }
+            });
+        }
+
+        // 更新面包屑导航
+        function updateBreadcrumb(windowId) {
+            const breadcrumb = document.getElementById(`breadcrumb-${windowId}`);
+            breadcrumb.innerHTML = '';
+
+            const pathParts = windows[windowId].currentPath ? windows[windowId].currentPath.split('/') : [];
+
+            // 根目录
+            const rootItem = document.createElement('span');
+            rootItem.className = 'breadcrumb-item';
+            rootItem.textContent = '根目录';
+            rootItem.setAttribute('data-path', '');
+            rootItem.addEventListener('click', () => {
+                windows[windowId].currentPath = '';
+                refreshFileList(windowId);
+                updateBreadcrumb(windowId);
+            });
+            breadcrumb.appendChild(rootItem);
+
+            // 子路径
+            let currentPath = '';
+            pathParts.forEach((part, index) => {
+                currentPath = currentPath ? `${currentPath}/${part}` : part;
+
+                const separator = document.createElement('span');
+                separator.textContent = ' / ';
+                breadcrumb.appendChild(separator);
+
+                const item = document.createElement('span');
+                item.className = 'breadcrumb-item';
+                item.textContent = part;
+                item.setAttribute('data-path', currentPath);
+                item.addEventListener('click', () => {
+                    windows[windowId].currentPath = currentPath;
+                    refreshFileList(windowId);
+                    updateBreadcrumb(windowId);
+                });
+                breadcrumb.appendChild(item);
+            });
+        }
+
+        // 创建编辑器窗口
+        function createEditorWindow(windowId, fileId = null) {
+            const file = fileId ? files[fileId] : createNewFile('未命名文档.md');
+
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.id = windowId;
+            windowEl.style.width = '800px';
+            windowEl.style.height = '600px';
+            windowEl.style.top = '100px';
+            windowEl.style.left = '100px';
+
+            windowEl.innerHTML = `
+        <div class="window-header">
+            <div class="window-title">
+                <i class="fas fa-file-alt"></i>
+                <span>${file.name}</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize-btn"><i class="fas fa-window-minimize"></i></button>
+                <button class="window-btn maximize-btn"><i class="fas fa-window-maximize"></i></button>
+                <button class="window-btn close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="editor-container">
+                <div class="editor-panel">
+                    <div class="editor-toolbar">
+                        <button title="保存" data-action="save"><i class="fas fa-save"></i> 保存</button>
+                        <button title="另存为" data-action="save-as"><i class="fas fa-copy"></i> 另存为</button>
+                        <button title="下载" data-action="download"><i class="fas fa-download"></i> 下载</button>
+                        <input type="text" id="filename-${windowId}" value="${file.name}" class="filename-input">
+                    </div>
+                    <textarea class="editor-textarea">${file.content || ''}</textarea>
+                </div>
+                <div class="preview-panel" id="preview-${windowId}"></div>
+            </div>
+        </div>
+    `;
+
+            desktop.appendChild(windowEl);
+            windows[windowId] = {
+                type: 'editor',
+                element: windowEl,
+                minimized: false,
+                maximized: false,
+                fileId: file.id
+            };
+
+            // 初始化窗口控制
+            initWindowControls(windowId);
+
+            // 初始化编辑器事件
+            const textarea = windowEl.querySelector('.editor-textarea');
+            const preview = document.getElementById(`preview-${windowId}`);
+
+            // 实时预览
+            textarea.addEventListener('input', function () {
+                updatePreview(this.value, preview);
+                file.content = this.value;
+                files[file.id] = file;
+            });
+
+            // 工具栏按钮
+            windowEl.querySelectorAll('.editor-toolbar button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const action = btn.getAttribute('data-action');
+                    if (action === 'save') {
+                        saveFile(file);
+                        showNotification('文件已保存');
+                    } else if (action === 'save-as') {
+                        const newName = prompt('输入新文件名', file.name);
+                        if (newName) {
+                            const newFile = createNewFile(newName);
+                            newFile.content = file.content;
+                            saveFile(newFile);
+                            filenameInput.value = newFile.name;
+                            file.name = newFile.name;
+                            windowEl.querySelector('.window-title span').textContent = newFile.name;
+                            showNotification(`已另存为 ${newFile.name}`);
+                        }
+                    } else if (action === 'download') {
+                        downloadFile(file);
+                        showNotification(`已下载 ${file.name}`);
+                    }
+                });
+            });
+
+            // 文件名变化
+            const filenameInput = document.getElementById(`filename-${windowId}`);
+            filenameInput.addEventListener('change', () => {
+                file.name = filenameInput.value;
+                windowEl.querySelector('.window-title span').textContent = file.name;
+                files[file.id] = file;
+            });
+
+            // 初始预览
+            updatePreview(file.content, preview);
+        }
+
+        // 更新预览
+        function updatePreview(content, previewElement) {
+            if (!previewElement) return;
+            try {
+                // 处理Markdown
+                let html = marked.parse(content || '');
+                // 处理KaTeX
+                html = html.replace(/\$\$(.*?)\$\$/g, (_, math) => katex.renderToString(math, { displayMode: true }))
+                    .replace(/\$(.*?)\$/g, (_, math) => katex.renderToString(math));
+                // 处理代码块高亮
+                html = html.replace(/```(\w*)([\s\S]*?)```/g, (_, lang, code) => {
+                    const language = lang || 'plaintext';
+                    const highlighted = hljs.highlight(code.trim(), { language }).value;
+                    return `<pre><code class="hljs ${language}">${highlighted}</code></pre>`;
+                });
+                previewElement.innerHTML = html;
+
+                // 添加复制按钮到所有代码块
+                document.querySelectorAll('pre code').forEach(block => {
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn';
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                    copyBtn.title = '复制代码';
+                    copyBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(block.textContent);
+                        showNotification('代码已复制');
+                    });
+
+                    const languageLabel = document.createElement('span');
+                    languageLabel.className = 'language-label';
+                    languageLabel.textContent = block.className.replace('hljs ', '') || 'text';
+
+                    const toolbar = document.createElement('div');
+                    toolbar.className = 'code-toolbar';
+                    toolbar.appendChild(languageLabel);
+                    toolbar.appendChild(copyBtn);
+
+                    block.parentNode.insertBefore(toolbar, block);
+                });
+            } catch (e) {
+                previewElement.innerHTML = `<div class="error">渲染错误: ${e.message}</div>`;
+            }
+        }
+
+        function createMonacoEditorWindow(windowId, fileId = null) {
+            const file = fileId ? files[fileId] : createNewFile('未命名代码.js');
+
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.id = windowId;
+            windowEl.style.width = '900px';
+            windowEl.style.height = '600px';
+            windowEl.style.top = '100px';
+            windowEl.style.left = '100px';
+
+            windowEl.innerHTML = `
+        <div class="window-header">
+            <div class="window-title">
+                <i class="fas fa-code"></i>
+                <span>${file.name}</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize-btn"><i class="fas fa-window-minimize"></i></button>
+                <button class="window-btn maximize-btn"><i class="fas fa-window-maximize"></i></button>
+                <button class="window-btn close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="editor-container">
+                <div class="editor-panel">
+                    <div class="editor-toolbar">
+                        <button title="保存" data-action="save"><i class="fas fa-save"></i> 保存</button>
+                        <button title="另存为" data-action="save-as"><i class="fas fa-copy"></i> 另存为</button>
+                        <button title="下载" data-action="download"><i class="fas fa-download"></i> 下载</button>
+                        <input type="text" id="filename-${windowId}" value="${file.name}" class="filename-input">
+                        <select id="language-select-${windowId}" class="language-select">
+                            <option value="javascript">JavaScript</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="json">JSON</option>
+                            <option value="markdown">Markdown</option>
+                            <option value="python">Python</option>
+                            <option value="java">Java</option>
+                            <option value="csharp">C#</option>
+                            <option value="cpp">C++</option>
+                            <option value="php">PHP</option>
+                            <option value="plaintext">Plain Text</option>
+                        </select>
+                        <button title="格式化代码" data-action="format"><i class="fas fa-align-left"></i> 格式化</button>
+                    </div>
+                    <div id="editor-container-${windowId}" class="monaco-editor-container">对不起，Monaco代码编辑器有bug，暂时无法使用。</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+            desktop.appendChild(windowEl);
+            windows[windowId] = {
+                type: 'monaco-editor',
+                element: windowEl,
+                minimized: false,
+                maximized: false,
+                fileId: file.id
+            };
+
+            // 初始化窗口控制
+            initWindowControls(windowId);
+
+            // 语言到文件扩展名映射
+            const langToExt = {
+                'javascript': '.js',
+                'typescript': '.ts',
+                'html': '.html',
+                'css': '.css',
+                'json': '.json',
+                'markdown': '.md',
+                'python': '.py',
+                'java': '.java',
+                'csharp': '.cs',
+                'cpp': '.cpp',
+                'php': '.php',
+                'plaintext': '.txt'
+            };
+
+            // 初始化 Monaco 编辑器
+            require(['vs/editor/editor.main'], function () {
+                const editorContainer = document.getElementById(`editor-container-${windowId}`);
+                const languageSelect = document.getElementById(`language-select-${windowId}`);
+                const filenameInput = document.getElementById(`filename-${windowId}`);
+
+                // 根据文件名自动检测语言
+                let language = 'plaintext';
+                const ext = file.name.split('.').pop().toLowerCase();
+                for (const [lang, langExt] of Object.entries(langToExt)) {
+                    if (langExt === `.${ext}`) {
+                        language = lang;
+                        break;
+                    }
+                }
+                languageSelect.value = language;
+
+                const value = ``;
+
+                const editor = monaco.editor.create(editorContainer, {
+                    value,
+                    language: "cpp",
+                    theme: 'vs',
+                    automaticLayout: true,
+                    fontSize: 14,
+                    fontFamily: 'Consolas, monospace',
+                    tabSize: 2,
+                    minimap: { enabled: true },
+                    scrollBeyondLastLine: false,
+                    roundedSelection: true,
+                    autoIndent: 'full',
+                    formatOnPaste: true,
+                    formatOnType: true
+                });
+
+                // 保存编辑器实例
+                windows[windowId].editor = editor;
+
+                // 监听内容变化
+                editor.onDidChangeModelContent(() => {
+                    file.content = editor.getValue();
+                    file.modified = Date.now();
+                    files[file.id] = file;
+                });
+
+                // 语言选择变化
+                languageSelect.addEventListener('change', () => {
+                    const selectedLang = languageSelect.value;
+                    const currentFilename = filenameInput.value;
+                    const baseName = currentFilename.replace(/\.[^/.]+$/, ""); // 去掉旧后缀
+
+                    const newExt = langToExt[selectedLang] || '';
+                    if (newExt) {
+                        filenameInput.value = baseName + newExt;
+                        file.name = baseName + newExt;
+                        windowEl.querySelector('.window-title span').textContent = file.name;
+                    }
+
+                    monaco.editor.setModelLanguage(editor.getModel(), selectedLang);
+                });
+
+                // 文件名变化
+                filenameInput.addEventListener('change', () => {
+                    file.name = filenameInput.value;
+                    windowEl.querySelector('.window-title span').textContent = file.name;
+                    files[file.id] = file;
+                });
+
+                // 工具栏按钮
+                windowEl.querySelectorAll('.editor-toolbar button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const action = btn.getAttribute('data-action');
+                        if (action === 'save') {
+                            saveFile(file);
+                            showNotification('文件已保存');
+                        } else if (action === 'save-as') {
+                            const newName = prompt('输入新文件名', file.name);
+                            if (newName) {
+                                const newFile = createNewFile(newName);
+                                newFile.content = file.content;
+                                saveFile(newFile);
+                                filenameInput.value = newFile.name;
+                                file.name = newFile.name;
+                                windowEl.querySelector('.window-title span').textContent = newFile.name;
+                                showNotification(`已另存为 ${newFile.name}`);
+                            }
+                        } else if (action === 'download') {
+                            downloadFile(file);
+                            showNotification(`已下载 ${file.name}`);
+                        } else if (action === 'format') {
+                            editor.getAction('editor.action.formatDocument').run();
+                            showNotification('代码已格式化');
+                        }
+                    });
+                });
+
+                // 窗口激活时聚焦编辑器
+                windowEl.addEventListener('focus', () => {
+                    editor.focus();
+                });
+            });
+
+            function showNotification(message) {
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.remove();
+                }, 2000);
+            }
+        }
+
+        function createSpaceWindow(windowId, spaceId = null) {
+            const space = spaceId ? spaces[spaceId] : createNewSpace();
+
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.id = windowId;
+            windowEl.style.width = '800px';
+            windowEl.style.height = '600px';
+            windowEl.style.top = '100px';
+            windowEl.style.left = '100px';
+
+            windowEl.innerHTML = `
+        <div class="window-header">
+            <div class="window-title">
+                <i class="fas fa-code"></i>
+                <span>${space.title}</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize-btn"><i class="fas fa-window-minimize"></i></button>
+                <button class="window-btn maximize-btn"><i class="fas fa-window-maximize"></i></button>
+                <button class="window-btn close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="editor-container">
+                <div class="editor-panel">
+                    <div class="editor-toolbar">
+                        <button title="保存" data-action="save"><i class="fas fa-save"></i> 保存</button>
+                        <button title="另存为" data-action="save-as"><i class="fas fa-copy"></i> 另存为</button>
+                        <input type="text" id="space-title-${windowId}" value="${space.title}" class="filename-input">
+                        <select id="language-select-${windowId}" class="language-select">
+                            <option value="markdown">Markdown</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="python">Python</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                        </select>
+                    </div>
+                    <textarea class="editor-textarea" id="space-content-${windowId}">${space.content || ''}</textarea>
+                </div>
+                <div class="preview-panel" id="space-preview-${windowId}"></div>
+            </div>
+        </div>
+    `;
+
+            desktop.appendChild(windowEl);
+            windows[windowId] = {
+                type: 'space',
+                element: windowEl,
+                minimized: false,
+                maximized: false,
+                spaceId: space.id
+            };
+
+            // 初始化窗口控制
+            initWindowControls(windowId);
+
+            // 初始化编辑器事件
+            const textarea = windowEl.querySelector('.editor-textarea');
+            const preview = document.getElementById(`space-preview-${windowId}`);
+            const titleInput = document.getElementById(`space-title-${windowId}`);
+            const languageSelect = document.getElementById(`language-select-${windowId}`);
+
+            // 设置语言选择
+            languageSelect.value = space.language || 'markdown';
+
+            // 实时预览
+            textarea.addEventListener('input', function () {
+                updateSpacePreview(this.value, preview, languageSelect.value);
+                space.content = this.value;
+                spaces[space.id] = space;
+                localStorage.setItem('spaces', JSON.stringify(spaces));
+            });
+
+            // 标题变化
+            titleInput.addEventListener('change', () => {
+                space.title = titleInput.value;
+                windowEl.querySelector('.window-title span').textContent = space.title;
+                spaces[space.id] = space;
+                localStorage.setItem('spaces', JSON.stringify(spaces));
+            });
+
+            // 语言变化
+            languageSelect.addEventListener('change', () => {
+                space.language = languageSelect.value;
+                spaces[space.id] = space;
+                localStorage.setItem('spaces', JSON.stringify(spaces));
+                updateSpacePreview(textarea.value, preview, languageSelect.value);
+            });
+
+            // 工具栏按钮
+            windowEl.querySelectorAll('.editor-toolbar button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const action = btn.getAttribute('data-action');
+                    if (action === 'save') {
+                        localStorage.setItem('spaces', JSON.stringify(spaces));
+                        showNotification('空间已保存');
+                    } else if (action === 'save-as') {
+                        const newSpace = createNewSpace();
+                        newSpace.title = space.title;
+                        newSpace.content = space.content;
+                        newSpace.language = space.language;
+                        spaces[newSpace.id] = newSpace;
+                        localStorage.setItem('spaces', JSON.stringify(spaces));
+                        showNotification(`已另存为新空间: ${newSpace.title}`);
+                    }
+                });
+            });
+
+            // 初始预览
+            updateSpacePreview(space.content, preview, space.language);
+        }
+
+        function createNewSpace(title = '新空间') {
+            const spaceId = `space-${Date.now()}`;
+            const space = {
+                id: spaceId,
+                title: title,
+                type: 'space',
+                content: '',
+                language: 'markdown',
+                created: Date.now(),
+                modified: Date.now()
+            };
+            spaces[spaceId] = space;
+            return space;
+        }
+
+        function updateSpacePreview(content, previewElement, language) {
+            if (!previewElement) return;
+
+            try {
+                let html = '';
+                if (language === 'markdown') {
+                    // 处理Markdown
+                    html = marked.parse(content || '');
+                    // 处理Katex
+                    html = html.replace(/\$\$(.*?)\$\$/g, (_, math) => katex.renderToString(math, { displayMode: true }))
+                        .replace(/\$(.*?)\$/g, (_, math) => katex.renderToString(math));
+
+                    // 处理代码块高亮
+                    html = html.replace(/```(\w*)([\s\S]*?)```/g, (_, lang, code) => {
+                        const language = lang || 'plaintext';
+                        const highlighted = hljs.highlight(code.trim(), { language }).value;
+                        return `<pre><code class="hljs ${language}">${highlighted}</code></pre>`;
+                    });
+                } else {
+                    // 非Markdown内容直接高亮显示
+                    const highlighted = hljs.highlight(content || '', { language }).value;
+                    html = `<pre><code class="hljs ${language}">${highlighted}</code></pre>`;
+                }
+
+                previewElement.innerHTML = html;
+
+                // 添加复制按钮
+                document.querySelectorAll('pre code').forEach(block => {
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'copy-btn';
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+                    copyBtn.title = '复制代码';
+                    copyBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(block.textContent);
+                        showNotification('代码已复制');
+                    });
+
+                    const languageLabel = document.createElement('span');
+                    languageLabel.className = 'language-label';
+                    languageLabel.textContent = block.className.replace('hljs ', '') || 'text';
+
+                    const toolbar = document.createElement('div');
+                    toolbar.className = 'code-toolbar';
+                    toolbar.appendChild(languageLabel);
+                    toolbar.appendChild(copyBtn);
+
+                    block.parentNode.insertBefore(toolbar, block);
+                });
+            } catch (e) {
+                previewElement.innerHTML = `<div class="error">渲染错误: ${e.message}</div>`;
+            }
+        }
+
+        function createSpaceManagerWindow(windowId) {
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.id = windowId;
+            windowEl.style.width = '800px';
+            windowEl.style.height = '500px';
+            windowEl.style.top = '50px';
+            windowEl.style.left = '50px';
+
+            windowEl.innerHTML = `
+        <div class="window-header">
+            <div class="window-title">
+                <i class="fas fa-cube"></i>
+                <span>空间管理器</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize-btn"><i class="fas fa-window-minimize"></i></button>
+                <button class="window-btn maximize-btn"><i class="fas fa-window-maximize"></i></button>
+                <button class="window-btn close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="file-manager">
+                <div class="sidebar">
+                    <h3>操作</h3>
+                    <button id="new-space-btn-${windowId}" class="toolbar-btn">
+                        <i class="fas fa-plus"></i> 新建空间
+                    </button>
+                    <button id="import-space-btn-${windowId}" class="toolbar-btn" style="margin-top: 5px;">
+                        <i class="fas fa-file-import"></i> 导入空间
+                    </button>
+                    <input type="file" id="space-import-input-${windowId}" style="display: none;">
+                </div>
+                <div class="file-content">
+                    <div class="file-list" id="space-list-${windowId}"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+            desktop.appendChild(windowEl);
+            windows[windowId] = {
+                type: 'space-manager',
+                element: windowEl,
+                minimized: false,
+                maximized: false
+            };
+
+            // 初始化窗口控制
+            initWindowControls(windowId);
+
+            // 刷新空间列表
+            refreshSpaceList(windowId);
+
+            // 新建空间按钮
+            const newSpaceBtn = document.getElementById(`new-space-btn-${windowId}`);
+            newSpaceBtn.addEventListener('click', () => {
+                const space = createNewSpace();
+                openApp('space', space.id);
+                refreshSpaceList(windowId);
+            });
+
+            // 导入空间按钮
+            const importSpaceBtn = document.getElementById(`import-space-btn-${windowId}`);
+            const spaceImportInput = document.getElementById(`space-import-input-${windowId}`);
+
+            importSpaceBtn.addEventListener('click', () => {
+                spaceImportInput.click();
+            });
+
+            spaceImportInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const importedSpace = JSON.parse(event.target.result);
+                            if (importedSpace.title && importedSpace.content) {
+                                const newSpace = createNewSpace(importedSpace.title);
+                                newSpace.content = importedSpace.content;
+                                newSpace.language = importedSpace.language || 'markdown';
+                                spaces[newSpace.id] = newSpace;
+                                localStorage.setItem('spaces', JSON.stringify(spaces));
+                                refreshSpaceList(windowId);
+                                showNotification(`已导入空间: ${newSpace.title}`);
+                            }
+                        } catch (e) {
+                            showNotification('导入失败: 文件格式不正确');
+                        }
+                    };
+                    reader.readAsText(file);
+                    spaceImportInput.value = '';
+                }
+            });
+
+            // 空间列表双击事件
+            const spaceList = document.getElementById(`space-list-${windowId}`);
+            spaceList.addEventListener('dblclick', (e) => {
+                const spaceItem = e.target.closest('.space-item');
+                if (spaceItem) {
+                    const spaceId = spaceItem.getAttribute('data-space-id');
+                    openApp('space', spaceId);
+                }
+            });
+
+            // 空间列表右键菜单
+            spaceList.addEventListener('contextmenu', (e) => {
+                const spaceItem = e.target.closest('.space-item');
+                if (spaceItem) {
+                    e.preventDefault();
+                    const spaceId = spaceItem.getAttribute('data-space-id');
+                    console.log("显示右键菜单");
+                    showSpaceContextMenu(e.pageX, e.pageY, spaceId);
+                }
+            });
+        }
+
+        function refreshSpaceList(windowId) {
+            const spaceList = document.getElementById(`space-list-${windowId}`);
+            spaceList.innerHTML = '';
+
+            Object.values(spaces).forEach(space => {
+                const spaceItem = document.createElement('div');
+                spaceItem.className = 'file-item space-item';
+                spaceItem.setAttribute('data-space-id', space.id);
+                spaceItem.innerHTML = `
+            <i class="fas fa-cube"></i>
+            <span>${space.title}</span>
+            <span style="margin-left: auto; font-size: 12px; color: #666;">
+                ${new Date(space.modified).toLocaleString()}
+            </span>
+        `;
+                spaceList.appendChild(spaceItem);
+            });
+        }
+
+        function showSpaceContextMenu(x, y, spaceId) {
+            const contextMenu = document.createElement('div');
+            contextMenu.className = 'context-menu2';
+            contextMenu.style.left = `${x}px`;
+            contextMenu.style.top = `${y}px`;
+            contextMenu.innerHTML = `
+        <div class="context-menu2-item" data-action="open">打开</div>
+        <div class="context-menu2-item" data-action="rename">重命名</div>
+        <div class="context-menu2-item" data-action="export">导出</div>
+        <div class="context-menu2-item" data-action="delete" style="color: #f44336;">删除</div>
+    `;
+            document.body.appendChild(contextMenu);
+
+            // 点击菜单项
+            contextMenu.querySelectorAll('.context-menu2-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const action = item.getAttribute('data-action');
+                    handleSpaceAction(action, spaceId);
+                    contextMenu.remove();
+                });
+            });
+
+            // 点击其他地方关闭菜单
+            const closeMenu = (e) => {
+                if (!contextMenu.contains(e.target)) {
+                    contextMenu.remove();
+                    document.removeEventListener('click', closeMenu);
+                }
+            };
+            document.addEventListener('click', closeMenu);
+        }
+
+        function handleSpaceAction(action, spaceId) {
+            const space = spaces[spaceId];
+            switch (action) {
+                case 'open':
+                    openApp('space', spaceId);
+                    break;
+                case 'rename':
+                    const newName = prompt('输入新名称', space.title);
+                    if (newName) {
+                        space.title = newName;
+                        localStorage.setItem('spaces', JSON.stringify(spaces));
+                        refreshAllSpaceLists();
+                        showNotification('空间已重命名');
+                    }
+                    break;
+                case 'export':
+                    exportSpace(space);
+                    break;
+                case 'delete':
+                    if (confirm(`确定要删除空间 "${space.title}" 吗？`)) {
+                        delete spaces[spaceId];
+                        localStorage.setItem('spaces', JSON.stringify(spaces));
+                        refreshAllSpaceLists();
+                        showNotification('空间已删除');
+                    }
+                    break;
+            }
+        }
+
+        function exportSpace(space) {
+            const blob = new Blob([JSON.stringify({
+                title: space.title,
+                content: space.content,
+                language: space.language
+            }, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${space.title}.space.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification(`已导出空间: ${space.title}`);
+        }
+
+        function refreshAllSpaceLists() {
+            Object.keys(windows).forEach(windowId => {
+                if (windows[windowId].type === 'space-manager') {
+                    refreshSpaceList(windowId);
+                }
+            });
+        }
+
+        function createDiscoveryWindow(windowId) {
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.id = windowId;
+            windowEl.style.width = '900px';
+            windowEl.style.height = '700px';
+            windowEl.style.top = '50px';
+            windowEl.style.left = '50px';
+
+            windowEl.innerHTML = `
+        <div class="window-header">
+            <div class="window-title">
+                <i class="fas fa-compass"></i>
+                <span>发现</span>
+            </div>
+            <div class="window-controls">
+                <button class="window-btn minimize-btn"><i class="fas fa-window-minimize"></i></button>
+                <button class="window-btn maximize-btn"><i class="fas fa-window-maximize"></i></button>
+                <button class="window-btn close-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="window-content">
+            <div class="discovery-container">
+                <div class="discovery-tabs">
+                    <button class="discovery-tab active" data-tab="apps">友情链接</button>
+                    <button class="discovery-tab" data-tab="comments">用户留言</button>
+                </div>
+                <div class="discovery-content">
+                    <div class="discovery-section active" id="apps-section">
+                        <div class="carousel-container">
+                            <div class="carousel-images">
+                                <img src="https://cdn.luogu.com.cn/upload/image_hosting/4xcnr5xa.png" alt="1">
+                                <img src="https://cdn.luogu.com.cn/upload/image_hosting/4xcnr5xa.png" alt="2">
+                                <img src="https://cdn.luogu.com.cn/upload/image_hosting/4xcnr5xa.png" alt="3">
+                                <img src="https://cdn.luogu.com.cn/upload/image_hosting/4xcnr5xa.png" alt="4">
+                                <img src="https://cdn.luogu.com.cn/upload/image_hosting/4xcnr5xa.png" alt="5">
+                                <img src="https://cdn.luogu.com.cn/upload/image_hosting/4xcnr5xa.png" alt="6">
+                            </div>
+                            <button class="carousel-btn prev"><i class="fas fa-chevron-left"></i></button>
+                            <button class="carousel-btn next"><i class="fas fa-chevron-right"></i></button>
+                            <div class="carousel-indicators"></div>
+                        </div>
+                        <div class="app-grid">
+                            <div class="app-card">
+                                <img src="" alt="应用1">
+                                <h3>应用1</h3>
+                                <p>应用1</p>
+                                <button class="download-btn">立即前往</button>
+                            </div>
+                            <div class="app-card">
+                                <img src="" alt="应用2">
+                                <h3>应用2</h3>
+                                <p>应用2</p>
+                                <button class="download-btn">立即前往</button>
+                            </div>
+                            <div class="app-card">
+                                <img src="" alt="应用3">
+                                <h3>应用3</h3>
+                                <p>应用3</p>
+                                <button class="download-btn">立即前往</button>
+                            </div>
+                            <div class="app-card">
+                                <img src="" alt="应用4">
+                                <h3>应用4</h3>
+                                <p>应用4</p>
+                                <button class="download-btn">立即前往</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="discovery-section" id="comments-section">
+                        <div class="giscus-comments" id="giscus-comments"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+            desktop.appendChild(windowEl);
+            windows[windowId] = {
+                type: 'discovery',
+                element: windowEl,
+                minimized: false,
+                maximized: false
+            };
+
+            // 初始化窗口控制
+            initWindowControls(windowId);
+
+            // 初始化标签切换
+            const tabs = windowEl.querySelectorAll('.discovery-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const tabId = tab.getAttribute('data-tab');
+                    windowEl.querySelectorAll('.discovery-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    windowEl.querySelector(`#${tabId}-section`).classList.add('active');
+
+                    // 加载giscus评论
+                    if (tabId === 'comments') {
+                        loadGiscus();
+                    }
+                });
+            });
+
+            // 轮播逻辑
+            const carouselContainer = windowEl.querySelector('.carousel-container');
+            if (carouselContainer) {
+                const images = carouselContainer.querySelector('.carousel-images');
+                const indicatorsContainer = carouselContainer.querySelector('.carousel-indicators');
+                const imageCount = images.children.length;
+                let currentIndex = 0;
+                let interval;
+
+                // 创建指示器按钮
+                for (let i = 0; i < imageCount; i++) {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'carousel-indicator';
+                    if (i === 0) indicator.classList.add('active');
+                    indicator.addEventListener('click', () => goToSlide(i));
+                    indicatorsContainer.appendChild(indicator);
+                }
+
+                function updateIndicators() {
+                    const indicators = indicatorsContainer.querySelectorAll('.carousel-indicator');
+                    indicators.forEach((ind, idx) => {
+                        ind.classList.toggle('active', idx === currentIndex);
+                    });
+                }
+
+                function goToSlide(index) {
+                    currentIndex = index;
+                    images.style.transform = `translateX(-${currentIndex * 100}%)`;
+                    updateIndicators();
+                }
+
+                // 获取按钮元素
+                const prevBtn = carouselContainer.querySelector('.carousel-btn.prev');
+                const nextBtn = carouselContainer.querySelector('.carousel-btn.next');
+
+                // 点击左按钮：上一张
+                prevBtn.addEventListener('click', () => {
+                    currentIndex = (currentIndex - 1 + imageCount) % imageCount;
+                    goToSlide(currentIndex);
+                });
+
+                // 点击右按钮：下一张
+                nextBtn.addEventListener('click', () => {
+                    currentIndex = (currentIndex + 1) % imageCount;
+                    goToSlide(currentIndex);
+                });
+
+                function startCarousel() {
+                    interval = setInterval(() => {
+                        currentIndex = (currentIndex + 1) % imageCount;
+                        goToSlide(currentIndex);
+                    }, 3000);
+                }
+
+                function stopCarousel() {
+                    clearInterval(interval);
+                }
+
+                carouselContainer.addEventListener('mouseenter', stopCarousel);
+                carouselContainer.addEventListener('mouseleave', startCarousel);
+
+                updateIndicators();
+                startCarousel();
+            }
+        }
+
+        function loadGiscus() {
+            if (!window.giscusLoaded) {
+                const script = document.createElement('script');
+                script.src = 'https://giscus.app/client.js';
+                script.setAttribute('data-repo', 'SnakeOS1/SnakeOS1.github.io');
+                script.setAttribute('data-repo-id', 'R_kgDOOsdNJA');
+                script.setAttribute('data-category', 'General');
+                script.setAttribute('data-category-id', 'DIC_kwDOOsdNJM4CqUuG');
+                script.setAttribute('data-mapping', 'pathname');
+                script.setAttribute('data-strict', '0');
+                script.setAttribute('data-reactions-enabled', '1');
+                script.setAttribute('data-emit-metadata', '0');
+                script.setAttribute('data-input-position', 'bottom');
+                script.setAttribute('data-theme', 'preferred_color_scheme');
+                script.setAttribute('data-lang', 'zh-CN');
+                script.crossOrigin = 'anonymous';
+                script.async = true;
+
+                document.getElementById('giscus-comments').appendChild(script);
+                window.giscusLoaded = true;
+            }
+        }
+
+        // 初始化窗口控制
+        function initWindowControls(windowId) {
+            const windowEl = document.getElementById(windowId);
+            const header = windowEl.querySelector('.window-header');
+            const minimizeBtn = windowEl.querySelector('.minimize-btn');
+            const maximizeBtn = windowEl.querySelector('.maximize-btn');
+            const closeBtn = windowEl.querySelector('.close-btn');
+
+            // 最小化
+            minimizeBtn.addEventListener('click', () => toggleMinimize(windowId));
+
+            // 最大化/恢复
+            maximizeBtn.addEventListener('click', () => toggleMaximize(windowId));
+
+            // 关闭
+            closeBtn.addEventListener('click', () => closeWindow(windowId));
+
+            // 窗口拖动
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initialLeft = parseFloat(windowEl.style.left) || 0;
+                initialTop = parseFloat(windowEl.style.top) || 0;
+                activateWindow(windowId);
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+                    windowEl.style.left = `${initialLeft + dx}px`;
+                    windowEl.style.top = `${initialTop + dy}px`;
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        }
+
+        // // 窗口操作
+        // function activateWindow(windowId) {
+        //     if (activeWindowId) {
+        //         windows[activeWindowId].element.style.zIndex = 100;
+        //     }
+        //     windows[windowId].element.style.zIndex = 200;
+        //     activeWindowId = windowId;
+
+        //     // 更新任务栏状态
+        //     document.querySelectorAll('.taskbar-item').forEach(item => {
+        //         item.classList.toggle('active', item.getAttribute('data-window-id') === windowId);
+        //     });
+        // }
+
+        function activateWindow(windowId) {
+            // 先检查是否有当前活动窗口
+            if (activeWindowId && windows[activeWindowId]) {
+                windows[activeWindowId].element.style.zIndex = 100;
+            }
+
+            // 设置新窗口为活动窗口并提高zIndex
+            activeWindowId = windowId;
+            windows[windowId].element.style.zIndex = 1000;
+
+            // 更新任务栏状态
+            document.querySelectorAll('.taskbar-item').forEach(item => {
+                item.classList.toggle('active', item.getAttribute('data-window-id') === windowId);
+            });
+        }
+
+        function toggleMinimize(windowId) {
+            const window = windows[windowId];
+            window.minimized = !window.minimized;
+            window.element.classList.toggle('minimized', window.minimized);
+        }
+
+        function toggleMaximize(windowId) {
+            const window = windows[windowId];
+            window.maximized = !window.maximized;
+            window.element.classList.toggle('maximized', window.maximized);
+        }
+
+        function closeWindow(windowId) {
+            const window = windows[windowId];
+            window.element.remove();
+            delete windows[windowId];
+
+            // 从任务栏移除
+            const taskbarItem = document.querySelector(`.taskbar-item[data-window-id="${windowId}"]`);
+            if (taskbarItem) taskbarItem.remove();
+        }
+
+        // 任务栏管理
+        function addToTaskbar(windowId, appType) {
+            const existing = document.querySelector(`.taskbar-item[data-window-id="${windowId}"]`);
+            if (existing) return;
+
+            const item = document.createElement('button');
+            item.className = 'taskbar-item';
+            item.setAttribute('data-window-id', windowId);
+
+            let icon, title;
+            if (appType === 'file-manager') {
+                icon = 'fa-folder';
+                title = '文件管理器';
+            } else if (appType === 'editor') {
+                icon = 'fa-file-alt';
+                title = '文本编辑器';
+            } else if (appType === 'monaco-editor') {
+                icon = 'fa-code';
+                title = '代码编辑器';
+            } else if (appType === 'space') {
+                icon = 'fa-cube';
+                title = '代码空间';
+            } else if (appType === 'space-manager') {
+                icon = 'fa-cubes';
+                title = '空间管理器';
+            } else if (appType === 'discovery') {
+                icon = 'fas fa-compass';
+                title = '发现';
+            }
+
+            item.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <span>${title}</span>
+    `;
+
+            item.addEventListener('click', () => {
+                if (windows[windowId].minimized) {
+                    toggleMinimize(windowId);
+                }
+                activateWindow(windowId);
+            });
+
+            taskbarItems.appendChild(item);
+        }
+
+        // 文件操作
+        function createNewFile(name = '未命名文档.md') {
+            const fileId = `file-${Date.now()}`;
+            const file = {
+                id: fileId,
+                name: name,
+                content: '',
+                type: name.endsWith('.md') ? 'markdown' : 'html',
+                created: Date.now(),
+                modified: Date.now()
+            };
+            files[fileId] = file;
+            return file;
+        }
+
+        function downloadFile(file) {
+            const blob = new Blob([file.content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = file.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function saveFile(file) {
+            file.modified = Date.now();
+            files[file.id] = file;
+            localStorage.setItem('files', JSON.stringify(files));
+        }
+
+        function refreshFileList(windowId) {
+            const fileList = document.getElementById(`file-list-${windowId}`);
+            fileList.innerHTML = '';
+
+            const currentPath = windows[windowId].currentPath || '';
+            const pathPrefix = currentPath ? `${currentPath}/` : '';
+
+            // 按文件夹分组
+            const folders = {};
+            const rootFiles = [];
+
+            Object.values(files).forEach(file => {
+                // 跳过隐藏的文件夹标记文件
+                // if (file.name.endsWith('/.folder')) return;
+
+                // 检查文件是否在当前路径下
+                if (file.name.startsWith(pathPrefix)) {
+                    const relativePath = file.name.substring(pathPrefix.length);
+                    const pathParts = relativePath.split('/');
+
+                    if (pathParts.length > 1) {
+                        // 文件在子文件夹中
+                        const folderName = pathParts[0];
+                        if (!folders[folderName]) {
+                            folders[folderName] = [];
+                        }
+                        folders[folderName].push(file);
+                    } else {
+                        // 当前路径下的文件
+                        rootFiles.push(file);
+                    }
+                }
+            });
+
+            // 显示当前路径下的文件
+            rootFiles.forEach(file => {
+                const item = createFileItem(file);
+                fileList.appendChild(item);
+            });
+            // 显示子文件夹
+            Object.entries(folders).forEach(([folderName, folderFiles]) => {
+                // 检查是否有对应的文件夹标记文件
+                const folderMarker = `${pathPrefix}${folderName}/.folder`;
+                const hasFolderMarker = Object.values(files).some(f => f.name === folderMarker);
+
+                if (hasFolderMarker) {
+                    const folderItem = document.createElement('div');
+                    folderItem.className = 'file-item folder-item';
+                    folderItem.setAttribute('data-folder-name', folderName);
+                    folderItem.innerHTML = `
+                <i class="fas fa-folder"></i>
+                <span>${folderName}</span>
+            `;
+                    fileList.appendChild(folderItem);
+                } else {
+                    // 如果没有文件夹标记，显示为普通文件
+                    folderFiles.forEach(file => {
+                        const item = createFileItem(file);
+                        fileList.appendChild(item);
+                    });
+                }
+            });
+
+            // 更新面包屑导航
+            updateBreadcrumb(windowId);
+        }
+
+        function createFileItem(file) {
+            const item = document.createElement('div');
+            item.className = 'file-item';
+            item.setAttribute('data-file-id', file.id);
+            item.innerHTML = `
+        <i class="fas ${getFileIcon(file.name)}"></i>
+        <span>${file.name.split('/').pop()}</span>
+    `;
+            return item;
+        }
+
+        function getFileIcon(filename) {
+            if (filename.endsWith('.md')) return 'fa-file-code';
+            if (filename.endsWith('.js')) return 'fa-file-code';
+            if (filename.endsWith('.html')) return 'fa-file-code';
+            if (filename.endsWith('.css')) return 'fa-file-code';
+            if (filename.endsWith('.json')) return 'fa-file-code';
+            return 'fa-file';
+        }
+
+        // 状态保存/加载
+        function saveState() {
+            const state = {
+                windows: [],
+                files: files,
+                nextWindowId: nextWindowId
+            };
+
+            Object.entries(windows).forEach(([id, win]) => {
+                const rect = win.element.getBoundingClientRect();
+                state.windows.push({
+                    id: id,
+                    type: win.type,
+                    x: rect.left,
+                    y: rect.top,
+                    width: rect.width,
+                    height: rect.height,
+                    maximized: win.maximized,
+                    minimized: win.minimized,
+                    fileId: win.fileId
+                });
+
+            });
+
+            localStorage.setItem('os-state', JSON.stringify(state));
+            localStorage.setItem('files', JSON.stringify(files));
+            localStorage.setItem('spaces', JSON.stringify(spaces));
+        }
+
+        function loadState() {
+            const savedState = localStorage.getItem('os-state');
+            const savedFiles = localStorage.getItem('files');
+            const savedSpaces = localStorage.getItem('spaces');
+
+            if (savedSpaces) {
+                spaces = JSON.parse(savedSpaces);
+            }
+
+            if (savedFiles) {
+                files = JSON.parse(savedFiles);
+            }
+
+            if (savedState) {
+                const state = JSON.parse(savedState);
+                nextWindowId = state.nextWindowId;
+
+                state.windows.forEach(winState => {
+                    const winId = winState.id;
+                    if (winState.type === 'editor' && winState.fileId) {
+                        createEditorWindow(winId, winState.fileId);
+                    } else if (winState.type === 'space') {
+                        createSpaceWindow(winId); // 创建代码空间窗口
+                    } else if (winState.type === 'space-manager') {
+                        createSpaceManagerWindow(winId); // 创建空间管理器窗口
+                    } else if (winState.type === 'discovery') {
+                        createDiscoveryWindow(winId); // 创建发现窗口
+                    } else {
+                        createFileManagerWindow(winId); // 默认创建文件管理器
+                    }
+
+                    // 获取窗口元素并设置位置等属性
+                    const winEl = document.getElementById(winId);
+                    if (winEl) {
+                        winEl.style.left = `${winState.x}px`;
+                        winEl.style.top = `${winState.y}px`;
+                        winEl.style.width = `${winState.width}px`;
+                        winEl.style.height = `${winState.height}px`;
+
+                        // 同步窗口状态
+                        const windowData = windows[winId];
+                        if (windowData) {
+                            windowData.maximized = winState.maximized;
+                            windowData.minimized = winState.minimized;
+
+                            if (winState.maximized) {
+                                winEl.classList.add('maximized');
+                            }
+                            if (winState.minimized) {
+                                winEl.classList.add('minimized');
+                            }
+                        }
+                    }
+
+                    // 添加到任务栏 + 激活窗口
+                    addToTaskbar(winId, winState.type);
+                });
+            }
+        }
+
+        // 自动保存
+        function startAutoSave() {
+            autoSaveInterval = setInterval(() => {
+                saveState();
+            }, 5000);
+        }
+
+        // 初始化上下文菜单
+        contextMenu.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                const action = item.getAttribute('data-action');
+                const fileId = contextMenu.getAttribute('data-file-id');
+                handleFileAction(action, fileId);
+                hideContextMenu();
+            });
+        });
+
+        function handleFileAction(action, fileId) {
+            switch (action) {
+                case 'open':
+                    if (fileId) openApp('editor', fileId);
+                    break;
+                case 'rename':
+                    if (fileId) renameFile(fileId);
+                    break;
+                case 'delete':
+                    if (fileId) deleteFile(fileId);
+                    break;
+            }
+        }
+
+        function renameFile(fileId) {
+            const file = files[fileId];
+            const newName = prompt('输入新文件名', file.name);
+            if (newName) {
+                file.name = newName;
+                saveFile(file);
+                refreshAllFileLists();
+            }
+        }
+
+        function deleteFile(fileId) {
+            if (confirm('确定要删除这个文件吗？')) {
+                delete files[fileId];
+                localStorage.setItem('files', JSON.stringify(files));
+                refreshAllFileLists();
+            }
+        }
+
+        function refreshAllFileLists() {
+            Object.keys(windows).forEach(windowId => {
+                if (windows[windowId].type === 'file-manager') {
+                    refreshFileList(windowId);
+                }
+            });
+        }
+
+        function showNotification(message) {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+
+            // 添加到页面中
+            document.body.appendChild(notification);
+
+            // 设置定时器，在2秒后移除通知
+            setTimeout(() => {
+                notification.remove();
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>
