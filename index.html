@@ -6,12 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web OS</title>
     <!-- 国内CDN引入 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.16.4/katex.min.css">
     <script src="https://cdn.bootcdn.net/ajax/libs/KaTeX/0.16.4/katex.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/marked/4.2.12/marked.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.36.1/min/vs/editor/editor.main.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.36.1/min/vs/loader.js"></script>
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.36.1/min/vs/editor/editor.main.css">
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
     <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
@@ -20,7 +21,6 @@
     <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/languages/java.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/languages/cpp.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/languages/css.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <style>
         :root {
             --primary: #1e88e5;
@@ -31,6 +31,30 @@
             --bg: #f5f5f5;
             --window-bg: #fff;
             --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-light {
+            --primary: #1e88e5;
+            --primary-light: #64b5f6;
+            --primary-dark: #0d47a1;
+            --text: #333;
+            --text-light: #666;
+            --bg: #f5f5f5;
+            --window-bg: #fff;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 深色主题变量 */
+        .theme-dark {
+            --primary: #2962ff;
+            --primary-light: #448aff;
+            --primary-dark: #0029a3;
+            --text: #eee;
+            --text-light: #aaa;
+            --bg: #121212;
+            --window-bg: #1e1e1e;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --wallpaper: #121212;
         }
 
         * {
@@ -695,8 +719,8 @@
         }
 
         .hljs {
-            background-color: #f8f8f8;
-            color: #333;
+            background-color: var(--window-bg);
+            color: var(--text);
             padding: 1em;
             border-radius: 8px;
             font-size: 14px;
@@ -710,12 +734,11 @@
         }
 
         .hljs::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 4px;
+            background: var(--text-light);
         }
 
         .hljs::-webkit-scrollbar-track {
-            background: #eee;
+            background: var(--bg);
         }
 
         /* 时间点击面板样式 */
@@ -724,12 +747,13 @@
             bottom: 50px;
             right: 10px;
             width: 300px;
-            background-color: white;
             box-shadow: var(--shadow);
             border-radius: 8px 8px 0 0;
             z-index: 1000;
             display: none;
             padding: 10px;
+            background-color: var(--window-bg);
+            color: var(--text);
         }
 
         .time-panel-tabs {
@@ -1176,6 +1200,202 @@
         #taskbar-search::placeholder {
             color: #ffffff80;
         }
+
+        :root {
+            --primary: #1e88e5;
+            --primary-light: #64b5f6;
+            --primary-dark: #0d47a1;
+            --text: #333;
+            --text-light: #666;
+            --bg: #f5f5f5;
+            --window-bg: #fff;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --wallpaper: url('') no-repeat center center fixed;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            background: var(--wallpaper);
+            background-size: cover;
+        }
+
+        /* 桌面 */
+        .desktop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 50px;
+            overflow: hidden;
+        }
+
+        /* 任务栏 */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 1000;
+        }
+
+        /* 窗口样式 */
+        .window {
+            position: absolute;
+            min-width: 300px;
+            min-height: 200px;
+            background-color: var(--window-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+            resize: both;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        /* Monaco 编辑器容器 */
+        .monaco-editor-container {
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 代码块样式 */
+        pre {
+            position: relative;
+            margin: 1em 0;
+            border-radius: 8px;
+            background-color: #282c34;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        code {
+            display: block;
+            padding: 1em;
+            overflow-x: auto;
+            color: #abb2bf;
+            font-family: 'Consolas', 'Monaco', 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .code-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #21252b;
+            padding: 8px 12px;
+            border-radius: 8px 8px 0 0;
+            color: #9da5b4;
+            font-size: 13px;
+        }
+
+        .language-label {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #9da5b4;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        /* 设置窗口样式 */
+        .settings-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            padding: 0 10px;
+        }
+
+        .settings-tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .settings-tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .settings-section {
+            display: none;
+            padding: 15px;
+            height: calc(100% - 50px);
+            overflow-y: auto;
+        }
+
+        .settings-section.active {
+            display: block;
+        }
+
+        .settings-option {
+            margin-bottom: 15px;
+        }
+
+        .settings-option label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .settings-option select,
+        .settings-option input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .settings-option button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .settings-option button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* 文本编辑器Tab支持 */
+        .editor-textarea {
+            tab-size: 4;
+        }
     </style>
 </head>
 
@@ -1197,6 +1417,10 @@
             <div class="desktop-icon" data-app="discovery">
                 <i class="fas fa-compass"></i>
                 <span>发现</span>
+            </div>
+            <div class="desktop-icon" data-app="settings">
+                <i class="fas fa-cog"></i>
+                <span>设置</span>
             </div>
         </div>
 
@@ -1249,7 +1473,11 @@
                 <i class="fas fa-compass"></i>
                 <span>发现</span>
             </div>
-            <div class="start-menu-item" id="shutdown-btn" styel="display: none;">
+            <div class="start-menu-item" data-app="settings">
+                <i class="fas fa-cog"></i>
+                <span>设置</span>
+            </div>
+            <div class="start-menu-item" id="shutdown-btn" style="display: none;">
                 <i class="fas fa-power-off"></i>
                 <span>重启</span>
             </div>
@@ -1318,6 +1546,12 @@
         let timePanel;
         let currentDate = moment();
         let events = {};
+        let settings = {
+            theme: 'light',
+            wallpaper: '',
+            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            fontSize: '14px'
+        };
 
         // DOM元素
         const desktop = document.querySelector('.desktop');
@@ -1333,7 +1567,8 @@
             { name: '文本编辑器', icon: 'fa-file-alt', appType: 'editor' },
             { name: '代码空间', icon: 'fa-cube', appType: 'space' },
             { name: '代码空间管理器', icon: 'fa-cubes', appType: 'space-manager' },
-            { name: '发现', icon: 'fa-compass', appType: 'discovery' }
+            { name: '发现', icon: 'fa-compass', appType: 'discovery' },
+            { name: '设置', icon: 'fa-compass', appType: 'settings' }
         ];
 
         function getFilesAsSearchableList() {
@@ -1410,6 +1645,7 @@
             const rect = searchInput.getBoundingClientRect();
             dropdown.style.left = `${rect.right - 300}px`; // 宽度为 300
             dropdown.style.bottom = `${window.innerHeight - rect.top + 10}px`;
+            dropdown.style.color = `var(--wallpaper)`;
 
             // 清空内容
             dropdown.innerHTML = '';
@@ -1923,6 +2159,9 @@
                 case 'discovery':
                     createDiscoveryWindow(windowId);
                     break;
+                case 'settings':
+                    createSettingsWindow(windowId);
+                    break;
             }
 
             // 添加到任务栏
@@ -2317,46 +2556,46 @@
             windowEl.style.left = '100px';
 
             windowEl.innerHTML = `
-        <div class="window-header">
-            <div class="window-title">
-                <i class="fas fa-code"></i>
-                <span>${file.name}</span>
-            </div>
-            <div class="window-controls">
-                <button class="window-btn minimize-btn"><i class="fas fa-window-minimize"></i></button>
-                <button class="window-btn maximize-btn"><i class="fas fa-window-maximize"></i></button>
-                <button class="window-btn close-btn"><i class="fas fa-times"></i></button>
-            </div>
-        </div>
-        <div class="window-content">
-            <div class="editor-container">
-                <div class="editor-panel">
-                    <div class="editor-toolbar">
-                        <button title="保存" data-action="save"><i class="fas fa-save"></i> 保存</button>
-                        <button title="另存为" data-action="save-as"><i class="fas fa-copy"></i> 另存为</button>
-                        <button title="下载" data-action="download"><i class="fas fa-download"></i> 下载</button>
-                        <input type="text" id="filename-${windowId}" value="${file.name}" class="filename-input">
-                        <select id="language-select-${windowId}" class="language-select">
-                            <option value="javascript">JavaScript</option>
-                            <option value="typescript">TypeScript</option>
-                            <option value="html">HTML</option>
-                            <option value="css">CSS</option>
-                            <option value="json">JSON</option>
-                            <option value="markdown">Markdown</option>
-                            <option value="python">Python</option>
-                            <option value="java">Java</option>
-                            <option value="csharp">C#</option>
-                            <option value="cpp">C++</option>
-                            <option value="php">PHP</option>
-                            <option value="plaintext">Plain Text</option>
-                        </select>
-                        <button title="格式化代码" data-action="format"><i class="fas fa-align-left"></i> 格式化</button>
+                <div class="window-header">
+                    <div class="window-title">
+                        <i class="fas fa-code"></i>
+                        <span>${file.name}</span>
                     </div>
-                    <div id="editor-container-${windowId}" class="monaco-editor-container">对不起，Monaco代码编辑器有bug，暂时无法使用。</div>
+                    <div class="window-controls">
+                        <button class="window-btn minimize-btn"><i class="fas fa-window-minimize"></i></button>
+                        <button class="window-btn maximize-btn"><i class="fas fa-window-maximize"></i></button>
+                        <button class="window-btn close-btn"><i class="fas fa-times"></i></button>
+                    </div>
                 </div>
-            </div>
-        </div>
-    `;
+                <div class="window-content">
+                    <div class="editor-container">
+                        <div class="editor-panel">
+                            <div class="editor-toolbar">
+                                <button title="保存" data-action="save"><i class="fas fa-save"></i> 保存</button>
+                                <button title="另存为" data-action="save-as"><i class="fas fa-copy"></i> 另存为</button>
+                                <button title="下载" data-action="download"><i class="fas fa-download"></i> 下载</button>
+                                <input type="text" id="filename-${windowId}" value="${file.name}" class="filename-input">
+                                <select id="language-select-${windowId}" class="language-select">
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="html">HTML</option>
+                                    <option value="css">CSS</option>
+                                    <option value="json">JSON</option>
+                                    <option value="markdown">Markdown</option>
+                                    <option value="python">Python</option>
+                                    <option value="java">Java</option>
+                                    <option value="csharp">C#</option>
+                                    <option value="cpp">C++</option>
+                                    <option value="php">PHP</option>
+                                    <option value="plaintext">Plain Text</option>
+                                </select>
+                                <button title="格式化代码" data-action="format"><i class="fas fa-align-left"></i> 格式化</button>
+                            </div>
+                            <div id="editor-container-${windowId}" class="monaco-editor-container"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
 
             desktop.appendChild(windowEl);
             windows[windowId] = {
@@ -2370,22 +2609,6 @@
             // 初始化窗口控制
             initWindowControls(windowId);
 
-            // 语言到文件扩展名映射
-            const langToExt = {
-                'javascript': '.js',
-                'typescript': '.ts',
-                'html': '.html',
-                'css': '.css',
-                'json': '.json',
-                'markdown': '.md',
-                'python': '.py',
-                'java': '.java',
-                'csharp': '.cs',
-                'cpp': '.cpp',
-                'php': '.php',
-                'plaintext': '.txt'
-            };
-
             // 初始化 Monaco 编辑器
             require(['vs/editor/editor.main'], function () {
                 const editorContainer = document.getElementById(`editor-container-${windowId}`);
@@ -2395,24 +2618,31 @@
                 // 根据文件名自动检测语言
                 let language = 'plaintext';
                 const ext = file.name.split('.').pop().toLowerCase();
-                for (const [lang, langExt] of Object.entries(langToExt)) {
-                    if (langExt === `.${ext}`) {
-                        language = lang;
-                        break;
-                    }
-                }
+                const langMap = {
+                    'js': 'javascript',
+                    'ts': 'typescript',
+                    'html': 'html',
+                    'css': 'css',
+                    'json': 'json',
+                    'md': 'markdown',
+                    'py': 'python',
+                    'java': 'java',
+                    'cs': 'csharp',
+                    'cpp': 'cpp',
+                    'php': 'php',
+                    'txt': 'plaintext'
+                };
+                if (langMap[ext]) language = langMap[ext];
                 languageSelect.value = language;
 
-                const value = ``;
-
                 const editor = monaco.editor.create(editorContainer, {
-                    value,
-                    language: "cpp",
-                    theme: 'vs',
+                    value: file.content || '',
+                    language: language,
+                    theme: settings.theme === 'dark' ? 'vs-dark' : 'vs',
                     automaticLayout: true,
-                    fontSize: 14,
-                    fontFamily: 'Consolas, monospace',
-                    tabSize: 2,
+                    fontSize: parseInt(settings.fontSize),
+                    fontFamily: settings.fontFamily,
+                    tabSize: 4,
                     minimap: { enabled: true },
                     scrollBeyondLastLine: false,
                     roundedSelection: true,
@@ -2423,6 +2653,7 @@
 
                 // 保存编辑器实例
                 windows[windowId].editor = editor;
+                editorContainer._editor = editor;
 
                 // 监听内容变化
                 editor.onDidChangeModelContent(() => {
@@ -2435,12 +2666,12 @@
                 languageSelect.addEventListener('change', () => {
                     const selectedLang = languageSelect.value;
                     const currentFilename = filenameInput.value;
-                    const baseName = currentFilename.replace(/\.[^/.]+$/, ""); // 去掉旧后缀
+                    const baseName = currentFilename.replace(/\.[^/.]+$/, "");
 
-                    const newExt = langToExt[selectedLang] || '';
+                    const newExt = Object.entries(langMap).find(([ext, lang]) => lang === selectedLang)?.[0] || '';
                     if (newExt) {
-                        filenameInput.value = baseName + newExt;
-                        file.name = baseName + newExt;
+                        filenameInput.value = baseName + '.' + newExt;
+                        file.name = baseName + '.' + newExt;
                         windowEl.querySelector('.window-title span').textContent = file.name;
                     }
 
@@ -2487,16 +2718,6 @@
                     editor.focus();
                 });
             });
-
-            function showNotification(message) {
-                const notification = document.createElement('div');
-                notification.className = 'notification';
-                notification.textContent = message;
-                document.body.appendChild(notification);
-                setTimeout(() => {
-                    notification.remove();
-                }, 2000);
-            }
         }
 
         function createSpaceWindow(windowId, spaceId = null) {
@@ -3101,6 +3322,255 @@
             }
         }
 
+        // 添加设置应用
+        function createSettingsWindow(windowId) {
+            const windowEl = document.createElement('div');
+            windowEl.className = 'window';
+            windowEl.id = windowId;
+            windowEl.style.width = '700px';
+            windowEl.style.height = '500px';
+            windowEl.style.top = '100px';
+            windowEl.style.left = '100px';
+
+            windowEl.innerHTML = `
+                <div class="window-header">
+                    <div class="window-title">
+                        <i class="fas fa-cog"></i>
+                        <span>设置</span>
+                    </div>
+                    <div class="window-controls">
+                        <button class="window-btn minimize-btn"><i class="fas fa-window-minimize"></i></button>
+                        <button class="window-btn maximize-btn"><i class="fas fa-window-maximize"></i></button>
+                        <button class="window-btn close-btn"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <div class="window-content">
+                    <div class="settings-tabs">
+                        <div class="settings-tab active" data-tab="appearance">外观</div>
+                        <div class="settings-tab" data-tab="editor">编辑器</div>
+                        <div class="settings-tab" data-tab="system">系统</div>
+                    </div>
+                    <div class="settings-sections">
+                        <div class="settings-section active" id="appearance-section">
+                            <div class="settings-option">
+                                <label>主题</label>
+                                <select id="theme-select">
+                                    <option value="light">浅色（推荐）</option>
+                                    <option value="dark" disabled>深色（样式尚未完善，暂未开放）</option>
+                                </select>
+                            </div>
+                            <div class="settings-option">
+                                <label>壁纸</label>
+                                <input type="text" id="wallpaper-input" placeholder="输入壁纸URL">
+                                <button id="apply-wallpaper">应用壁纸</button>
+                            </div>
+                            <div class="settings-option">
+                                <label>字体</label>
+                                <select id="font-family-select">
+                                    <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Segoe UI</option>
+                                    <option value="Arial, sans-serif">Arial</option>
+                                    <option value="'Helvetica Neue', Helvetica, sans-serif">Helvetica</option>
+                                    <option value="'Courier New', monospace">Courier New</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="settings-section" id="editor-section">
+                            <div class="settings-option">
+                                <label>编辑器字体大小</label>
+                                <input type="range" id="font-size-slider" min="10" max="24" value="14">
+                                <span id="font-size-value">14px</span>
+                            </div>
+                            <div class="settings-option">
+                                <label>Tab键缩进大小</label>
+                                <input type="number" id="tab-size-input" min="1" max="8" value="4">
+                            </div>
+                        </div>
+                        <div class="settings-section" id="system-section">
+                            <div class="settings-option">
+                                <button id="export-settings">导出系统设置</button>
+                            </div>
+                            <div class="settings-option">
+                                <input type="file" id="import-settings-input" style="display: none;">
+                                <button id="import-settings">导入系统设置</button>
+                            </div>
+                            <div class="settings-option">
+                                <button id="reset-settings">恢复默认设置</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            desktop.appendChild(windowEl);
+            windows[windowId] = {
+                type: 'settings',
+                element: windowEl,
+                minimized: false,
+                maximized: false
+            };
+
+            // 初始化窗口控制
+            initWindowControls(windowId);
+
+            // 初始化设置值
+            document.getElementById('theme-select').value = settings.theme;
+            document.getElementById('wallpaper-input').value = settings.wallpaper;
+            document.getElementById('font-family-select').value = settings.fontFamily;
+            document.getElementById('font-size-slider').value = parseInt(settings.fontSize);
+            document.getElementById('font-size-value').textContent = settings.fontSize;
+
+            // 标签切换
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const tabId = tab.getAttribute('data-tab');
+                    document.querySelectorAll('.settings-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    document.getElementById(`${tabId}-section`).classList.add('active');
+                });
+            });
+
+            // 应用设置
+            document.getElementById('theme-select').addEventListener('change', function () {
+                settings.theme = this.value;
+                applySettings();
+            });
+
+            document.getElementById('apply-wallpaper').addEventListener('click', function () {
+                settings.wallpaper = document.getElementById('wallpaper-input').value;
+                applySettings();
+            });
+
+            document.getElementById('font-family-select').addEventListener('change', function () {
+                settings.fontFamily = this.value;
+                applySettings();
+            });
+
+            document.getElementById('font-size-slider').addEventListener('input', function () {
+                const size = this.value + 'px';
+                document.getElementById('font-size-value').textContent = size;
+                settings.fontSize = size;
+                applySettings();
+            });
+
+            document.getElementById('tab-size-input').addEventListener('change', function () {
+                document.querySelectorAll('.editor-textarea').forEach(textarea => {
+                    textarea.style.tabSize = this.value;
+                });
+            });
+
+            // 导出/导入设置
+            document.getElementById('export-settings').addEventListener('click', function () {
+                const blob = new Blob([JSON.stringify({
+                    settings: settings,
+                    files: files,
+                    spaces: spaces
+                })], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'webos-settings.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            document.getElementById('import-settings').addEventListener('click', function () {
+                document.getElementById('import-settings-input').click();
+            });
+
+            document.getElementById('import-settings-input').addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        try {
+                            const data = JSON.parse(event.target.result);
+                            if (data.settings) {
+                                settings = data.settings;
+                                if (data.files) files = data.files;
+                                if (data.spaces) spaces = data.spaces;
+                                applySettings();
+                                showNotification('设置已导入并应用');
+                            }
+                        } catch (e) {
+                            showNotification('导入失败: 文件格式不正确');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            document.getElementById('reset-settings').addEventListener('click', function () {
+                if (confirm('确定要恢复默认设置吗？这将重置所有个性化设置。')) {
+                    settings = {
+                        theme: 'light',
+                        wallpaper: '',
+                        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                        fontSize: '14px'
+                    };
+                    applySettings();
+                    showNotification('已恢复默认设置');
+                }
+            });
+        }
+
+        // 应用设置
+        function applySettings() {
+            // 应用主题
+            document.documentElement.style.setProperty('--font-family', settings.fontFamily);
+
+            // if (settings.theme === 'dark') {
+            //     setTheme('dark');
+            // } else if (settings.theme === 'light') {
+            //     setTheme('light');
+            // }
+
+            // 应用壁纸
+            const desktop = document.querySelector('.desktop');
+            if (desktop) {
+                desktop.style.backgroundImage = `url('${settings.wallpaper}')`;
+            }
+
+            // 应用字体大小
+            document.querySelectorAll('.monaco-editor-container').forEach(editor => {
+                if (editor._editor) {
+                    editor._editor.updateOptions({
+                        fontSize: parseInt(settings.fontSize)
+                    });
+                }
+            });
+
+            // 保存设置
+            localStorage.setItem('webos-settings', JSON.stringify(settings));
+        }
+
+        // 在DOM加载时加载设置
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedSettings = localStorage.getItem('webos-settings');
+            if (savedSettings) {
+                settings = JSON.parse(savedSettings);
+                applySettings();
+            }
+
+            // 为文本编辑器添加Tab支持
+            document.addEventListener('keydown', function (e) {
+                if (e.target.classList.contains('editor-textarea') && e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = e.target.selectionStart;
+                    const end = e.target.selectionEnd;
+                    const value = e.target.value;
+
+                    e.target.value = value.substring(0, start) + '\t' + value.substring(end);
+                    e.target.selectionStart = e.target.selectionEnd = start + 1;
+                }
+            });
+        });
+
         // 初始化窗口控制
         function initWindowControls(windowId) {
             const windowEl = document.getElementById(windowId);
@@ -3225,6 +3695,9 @@
             } else if (appType === 'discovery') {
                 icon = 'fas fa-compass';
                 title = '发现';
+            } else if (appType === 'settings') {
+                icon = 'fas fa-cog';
+                title = '设置';
             }
 
             item.innerHTML = `
@@ -3418,6 +3891,8 @@
                         createSpaceManagerWindow(winId); // 创建空间管理器窗口
                     } else if (winState.type === 'discovery') {
                         createDiscoveryWindow(winId); // 创建发现窗口
+                    } else if (winState.type === 'settings') {
+                        createSettingsWindow(winId); // 创建设置窗口
                     } else {
                         createFileManagerWindow(winId); // 默认创建文件管理器
                     }
@@ -3521,6 +3996,15 @@
             setTimeout(() => {
                 notification.remove();
             }, 2000);
+        }
+
+        function setTheme(theme) {
+            document.body.className = ''; // 清除旧主题
+            if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+            } else {
+                document.body.classList.add('theme-light'); // 默认或显式加 light
+            }
         }
     </script>
 </body>
